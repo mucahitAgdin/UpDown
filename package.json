@@ -1,9 +1,9 @@
 {
   "name": "wake-on-lan",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "main.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "electron ."
   },
   "keywords": [],
   "author": "",
@@ -11,5 +11,8 @@
   "description": "",
   "devDependencies": {
     "electron": "^35.0.2"
+  },
+  "dependencies": {
+    "wol": "^1.0.7"
   }
 }
