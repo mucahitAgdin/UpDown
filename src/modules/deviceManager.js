@@ -1,5 +1,6 @@
 const fs = require("fs");
 const path = require("path");
+const wol = require("wake-on-lan");
 
 // JSON dosyasının yolu 
 const filePath = path.join(__dirname, "devices.json");

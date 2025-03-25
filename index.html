@@ -1,21 +1,29 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Wake On LAN</title>
     <link rel="stylesheet" href="styles.css">
 </head>
+
 <body>
     <div class="container">
-        <!-- Sidebar -->
-        <aside class="sidebar">
-            <h2>Wake On LAN</h2>
-            <nav>
-                <button id="btn-computers">Computers</button>
-                <button id="btn-find-device">Find Device</button>
-            </nav>
-        </aside>
+
+        <!-- Side bar -->
+        <button id="toggleSidebar">☰</button>
+
+        <div id="sidebar" class="sidebar">
+            <ul>
+                <li><a href="#" id="btn-home">Home</a></li>
+                <li><a href="#" id="btn-computers">Devices</a></li>
+                <li><a href="#" id="btn-find-device">Find Device</a></li>
+                <li><a href="#" id="btn-settings">Settings</a></li>
+            </ul>
+        </div>
+
+
 
         <!-- Main Content -->
         <main class="content">
@@ -38,4 +46,5 @@
 
     <script src="renderer.js"></script>
 </body>
+
 </html>
