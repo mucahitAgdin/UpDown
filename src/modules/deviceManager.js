@@ -13,7 +13,7 @@ function loadDevices() {
     }
 
     const data = fs.readFileSync(filePath, "utf8");
-    return JSON.parse(data); // `devices` anahtarı gereksizdi
+    return JSON.parse(data); 
   } catch (error) {
     console.error("Error reading devices.json:", error);
     return [];

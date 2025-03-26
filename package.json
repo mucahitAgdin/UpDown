@@ -13,6 +13,7 @@
     "electron": "^35.0.2"
   },
   "dependencies": {
+    "ping": "^0.4.4",
     "wake-on-lan": "^0.1.0",
     "wol": "^1.0.7"
   }
