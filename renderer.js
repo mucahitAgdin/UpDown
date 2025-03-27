@@ -41,7 +41,7 @@ document.addEventListener("DOMContentLoaded", function () {
 // **Cihazları Yükle**
 async function loadDevices() {
     const devices = await ipcRenderer.invoke("get-device-list");
-    console.log("📡 Cihaz Listesi:", devices);
+    console.log("Cihaz Listesi:", devices);
 
     const deviceListDiv = document.getElementById("device-list");
     deviceListDiv.innerHTML = ""; // Önce listeyi temizle

@@ -4,8 +4,8 @@ body {
   padding: 0;
   display: flex;
   height: 100vh;
-  background-color: #005f73;
-  color: white;
+  background-color: #e0c4b8; /* Cream */
+  color: #333;
 }
 
 .container {
@@ -16,18 +16,17 @@ body {
 .sidebar {
   width: 250px;
   height: 100vh;
-  background: #003b5c;
+  background: #c25b6a; /* Hot Pink */
   position: fixed;
   top: 0;
   left: -250px;
-  /* Sidebar başlangıçta gizli */
   transition: left 0.3s ease-in-out;
   padding-top: 20px;
+  color: white;
 }
 
 .sidebar.show {
   left: 0;
-  /* Açıldığında sidebar görünecek */
 }
 
 .sidebar ul {
@@ -46,34 +45,35 @@ body {
   display: block;
   padding: 10px;
   transition: background 0.3s;
+  border-radius: 5px;
 }
 
 .sidebar ul li a:hover {
-  background: #555;
+  background: #b07b8b; /* Rosewater */
 }
 
 #toggleSidebar {
   position: absolute;
   top: 20px;
   left: 20px;
-  background: #333;
+  background: #c25b6a; /* Hot Pink */
   color: white;
   border: none;
   padding: 10px;
   cursor: pointer;
   transition: background 0.3s;
+  border-radius: 5px;
 }
 
 #toggleSidebar:hover {
-  background: #555;
+  background: #b07b8b; /* Rosewater */
 }
 
 .content {
   flex-grow: 1;
   padding: 50px;
-  background-color: #005f73;
+  background-color: #88b8a3; /* Spearmint */
   margin-left: 250px;
-  /* Sidebar açıldığında içerik kaymaz */
   transition: margin-left 0.3s ease-in-out;
 }
 
@@ -82,20 +82,22 @@ body {
 }
 
 #search-device {
-  background-color: #ffa600;
+  background-color: #c25b6a; /* Hot Pink */
   border: none;
   padding: 10px;
   cursor: pointer;
   margin-top: 10px;
+  color: white;
+  border-radius: 5px;
 }
 
 #search-device:hover {
-  background-color: #ffcc00;
+  background-color: #b07b8b; /* Rosewater */
 }
 
 #device-list {
   margin-top: 20px;
-  background: #ffffff22;
+  background: #ffffff55; 
   padding: 10px;
   border-radius: 5px;
 }
