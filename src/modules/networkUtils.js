@@ -25,16 +25,31 @@ function getSubnet(ip){
 //test 
 console.log("subnet:", getSubnet("192.168.31.76"));
 
-function getIPRange() {
-    const localIP = getLocalIP();
-    if(!localIP) return null;
 
-    const subnet = getSubnet(localIP); //alt ağı belirle
-    return `${subnet}.1-${subnet}.255`; // başlangıç ve bitiş IP'leri
+// Alt ağı al
+function getIPRange() {
+    const interfaces = os.networkInterfaces();
+    let localIP = null;
+
+    // Tüm ağ arayüzlerini tara
+    Object.values(interfaces).forEach((iface) => {
+        iface.forEach((entry) => {
+            if (entry.family === "IPv4" && !entry.internal) {
+                localIP = entry.address;
+            }
+        });
+    });
+
+    if (!localIP) {
+        console.log("IP adresi bulunamadı.");
+        return null;
+    }
+
+    const subnet = localIP.split('.').slice(0, 3).join('.'); // İlk 3 bloğu al
+    return subnet; // "192.168.31"
 }
 
-//test
-console.log("IP Araligi:", getIPRange());
+module.exports = { getIPRange };
 
 // Modül olarak dışa aktar
 module.exports = { getLocalIP, getSubnet, getIPRange };
