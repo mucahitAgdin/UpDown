@@ -1,32 +1,29 @@
-const ping = require("ping");
-const { addDevice } = require("./deviceManager");
-const { getMacAddress } = require("./macFinder");
+const { exec } = require("child_process");
 
-// Alt ağ IP aralığını belirle
-const subnet = "192.168.48"; // Kendi ağınıza göre değiştirin
-const ipRange = Array.from({ length: 255 }, (_, i) => `${subnet}.${i + 1}`);
-
-async function scanNetwork() {
-    console.log(`Ağ taraması başlatıldı: ${subnet}.1 - ${subnet}.255`);
-
-    // Bütün IP'leri aynı anda taramak için Promise.all kullan
-    const scanResults = await Promise.all(ipRange.map(async (ip) => {
-        const res = await ping.promise.probe(ip, { timeout: 1 }); // Timeout azaltıldı (1 saniye)
-        if (res.alive) {
-            const mac = await getMacAddress(ip);
-            if (mac) {
-                console.log(`Cihaz bulundu: IP: ${ip}, MAC: ${mac}`);
-                await addDevice(ip); // Cihazı kaydet
-            } else {
-                console.log(`MAC adresi bulunamadı: IP: ${ip}`);
+function scanNetwork() {
+    return new Promise((resolve, reject) => {
+        exec("arp -a", (error, stdout) => {
+            if (error) {
+                return reject(error);
             }
-            return { ip, mac };
-        }
-        return null;
-    }));
 
-    console.log("Tarama tamamlandı!");
+            const lines = stdout.split("\n");
+            const devices = [];
+
+            for (const line of lines) {
+                const match = line.match(/\(?(\d+\.\d+\.\d+\.\d+)\)?\s+(([a-fA-F0-9]{2}[-:]){5}[a-fA-F0-9]{2})/);
+                if (match) {
+                    devices.push({
+                        ip: match[1],
+                        mac: match[2],
+                        name: "Unknown"
+                    });
+                }
+            }
+
+            resolve(devices);
+        });
+    });
 }
 
-// Ağ taramasını başlat
-scanNetwork();
+module.exports = { scanNetwork };

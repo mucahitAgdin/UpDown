@@ -1,15 +1,17 @@
 const { app, BrowserWindow, ipcMain } = require("electron");
 const path = require("path");
-const { listDevices, removeDevice, addDevice } = require("./src/modules/deviceManager");
 
+// Modüller
+const { listDevices, removeDevice } = require("./src/modules/deviceManager");
+const { scanNetwork } = require("./src/modules/networkScanner"); // 🔍 Tarama
 
 function createWindow() {
     const mainWindow = new BrowserWindow({
         width: 800,
         height: 600,
         webPreferences: {
-            preload: path.join(__dirname, "preload.js"), // Önyükleme dosyası
-            nodeIntegration: true, // Renderer içinde `require` kullanabilmek için
+            preload: path.join(__dirname, "preload.js"),
+            nodeIntegration: true,
             contextIsolation: false
         }
     });
@@ -17,27 +19,38 @@ function createWindow() {
     mainWindow.loadFile("index.html");
 }
 
-// Uygulama hazır olduğunda pencereyi aç
+// Uygulama hazır olduğunda pencere oluştur
 app.whenReady().then(() => {
     createWindow();
 
-    // macOS için: Pencere kapalıysa yeniden aç
     app.on("activate", () => {
         if (BrowserWindow.getAllWindows().length === 0) createWindow();
     });
 });
 
-// Tüm pencereler kapandığında uygulamayı kapat (Windows/Linux)
+// Tüm pencereler kapanınca çık
 app.on("window-all-closed", () => {
     if (process.platform !== "darwin") app.quit();
 });
 
-// Renderer'dan gelen istekleri dinle ve yanıtla
+// 📥 Kayıtlı cihazları getir
 ipcMain.handle("get-device-list", async () => {
     return listDevices();
 });
 
+// 🗑️ Cihaz silme
 ipcMain.on("remove-device", (event, mac) => {
     removeDevice(mac);
-    event.sender.send("devices-list", listDevices()); // Güncellenmiş listeyi gönder
+    event.sender.send("devices-list", listDevices());
+});
+
+// 🔍 Ağ taraması
+ipcMain.handle("scan-network", async () => {
+    try {
+        const results = await scanNetwork();
+        return results;
+    } catch (err) {
+        console.error("Ağ tarama hatası:", err);
+        return [];
+    }
 });

@@ -1,22 +1,22 @@
 const { ipcRenderer } = require("electron");
 
-
 document.addEventListener("DOMContentLoaded", function () {
     const sidebar = document.querySelector(".sidebar");
     const toggleButton = document.getElementById("toggleSidebar");
     const content = document.querySelector(".content");
 
+    // Sidebar aç/kapa
     toggleButton.addEventListener("click", function () {
         if (sidebar.classList.contains("show")) {
             sidebar.classList.remove("show");
-            content.style.marginLeft = "0"; // Sidebar kapanınca içerik sola kayar
+            content.style.marginLeft = "0";
         } else {
             sidebar.classList.add("show");
-            content.style.marginLeft = "250px"; // Açılınca içerik sağa kayar
+            content.style.marginLeft = "250px";
         }
     });
 
-    // Sidebar dışına tıklayınca kapat
+    // Sidebar dışına tıklanınca kapat
     document.addEventListener("click", function (event) {
         if (!sidebar.contains(event.target) && !toggleButton.contains(event.target)) {
             sidebar.classList.remove("show");
@@ -24,7 +24,7 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 
-    // **Sekme Geçişleri**
+    // Sekmeler arası geçişler
     document.getElementById("btn-computers").addEventListener("click", function () {
         document.getElementById("computers-section").style.display = "block";
         document.getElementById("find-device-section").style.display = "none";
@@ -34,17 +34,16 @@ document.addEventListener("DOMContentLoaded", function () {
         document.getElementById("computers-section").style.display = "none";
         document.getElementById("find-device-section").style.display = "block";
     });
+
+    // Sayfa yüklendiğinde cihazları getir
+    loadDevices();
 });
 
-
-
-// **Cihazları Yükle**
+// 📥 IPC ile cihaz listesini çek ve ekrana bas
 async function loadDevices() {
     const devices = await ipcRenderer.invoke("get-device-list");
-    console.log("Cihaz Listesi:", devices);
-
     const deviceListDiv = document.getElementById("device-list");
-    deviceListDiv.innerHTML = ""; // Önce listeyi temizle
+    deviceListDiv.innerHTML = "";
 
     devices.forEach(device => {
         const deviceItem = document.createElement("div");
@@ -59,16 +58,46 @@ async function loadDevices() {
     });
 }
 
-// **Cihaz Silme İşlemi**
+// Cihaz sil butonu işlevi
 function removeDevice(mac) {
     ipcRenderer.send("remove-device", mac);
 }
 
-// **Liste Güncellendiğinde Yeniden Yükle**
-ipcRenderer.on("devices-list", (event, devices) => {
-    loadDevices(); // Yeni listeyi yükle
+// Liste güncellenince tekrar yükle
+ipcRenderer.on("devices-list", () => {
+    loadDevices();
 });
 
-// Sayfa yüklendiğinde cihazları çek
-document.addEventListener("DOMContentLoaded", loadDevices);
+// 🔍 Search Device butonu işlevi — tarama başlat
+document.getElementById("search-device").addEventListener("click", async function () {
+    const button = this;
+    button.textContent = "Searching...";
+    button.disabled = true;
 
+    try {
+        const results = await ipcRenderer.invoke("scan-network");
+
+        const deviceListDiv = document.getElementById("device-list");
+        deviceListDiv.innerHTML = "";
+
+        if (results.length === 0) {
+            deviceListDiv.innerHTML = "<p>No devices found.</p>";
+        } else {
+            results.forEach(device => {
+                const item = document.createElement("div");
+                item.classList.add("device-item");
+                item.innerHTML = `
+                    <p><strong>${device.name}</strong></p>
+                    <p>IP: ${device.ip}</p>
+                    <p>MAC: ${device.mac}</p>
+                `;
+                deviceListDiv.appendChild(item);
+            });
+        }
+    } catch (error) {
+        console.error("Tarama hatası:", error);
+    } finally {
+        button.textContent = "Search Device";
+        button.disabled = false;
+    }
+});
