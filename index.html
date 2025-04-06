@@ -1,17 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Wake On LAN</title>
     <link rel="stylesheet" href="styles.css">
 </head>
-
 <body>
     <div class="container">
-
-        <!-- Side bar -->
         <button id="toggleSidebar">☰</button>
 
         <div id="sidebar" class="sidebar">
@@ -23,29 +19,21 @@
             </ul>
         </div>
 
-
-
-        <!-- Main Content -->
         <main class="content">
-            <!-- FIND DEVICE SECTION -->
-            <section id="find-device-section" style="display: none">
+            <!-- FIND DEVICE -->
+            <section id="find-device-section" class="hidden">
                 <h2>Find Device</h2>
                 <button id="search-device">Search Device</button>
-                <div id="device-list">
-                    <!-- Tarama sonuçları buraya eklenecek -->
-                </div>
+                <div id="scanned-device-list" class="device-list"></div>
             </section>
 
-
-            <!-- COMPUTERS SECTION (DAHA ÖNCE EKLENMİŞTİ) -->
+            <!-- DEVICES -->
             <section id="computers-section">
-                <h2>Computers</h2>
-                <p>Computers list will be displayed here.</p>
+                <h2>Devices</h2>
+                <div id="device-list" class="device-list"></div>
             </section>
         </main>
     </div>
-
     <script src="renderer.js"></script>
 </body>
-
 </html>

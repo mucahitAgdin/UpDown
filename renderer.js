@@ -1,5 +1,6 @@
 const { ipcRenderer } = require("electron");
 
+// DOM hazır olunca başlat
 document.addEventListener("DOMContentLoaded", function () {
     const sidebar = document.querySelector(".sidebar");
     const toggleButton = document.getElementById("toggleSidebar");
@@ -7,13 +8,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Sidebar aç/kapa
     toggleButton.addEventListener("click", function () {
-        if (sidebar.classList.contains("show")) {
-            sidebar.classList.remove("show");
-            content.style.marginLeft = "0";
-        } else {
-            sidebar.classList.add("show");
-            content.style.marginLeft = "250px";
-        }
+        sidebar.classList.toggle("show");
+        content.style.marginLeft = sidebar.classList.contains("show") ? "250px" : "0";
     });
 
     // Sidebar dışına tıklanınca kapat
@@ -24,80 +20,85 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 
-    // Sekmeler arası geçişler
-    document.getElementById("btn-computers").addEventListener("click", function () {
+    // Sekmeler arasında geçiş
+    document.getElementById("btn-computers").addEventListener("click", () => {
         document.getElementById("computers-section").style.display = "block";
         document.getElementById("find-device-section").style.display = "none";
+        loadDevices(); // Devices sekmesine geçince güncelle
     });
 
-    document.getElementById("btn-find-device").addEventListener("click", function () {
+    document.getElementById("btn-find-device").addEventListener("click", () => {
         document.getElementById("computers-section").style.display = "none";
         document.getElementById("find-device-section").style.display = "block";
     });
 
-    // Sayfa yüklendiğinde cihazları getir
-    loadDevices();
+    // Tarama butonuna tıklanınca ağda cihazları ara
+    document.getElementById("search-device").addEventListener("click", async () => {
+        const scannedDevices = await ipcRenderer.invoke("scan-network");
+        displayScannedDevices(scannedDevices);
+    });
+
+    loadDevices(); // Sayfa yüklenince device listesi
 });
 
-// 📥 IPC ile cihaz listesini çek ve ekrana bas
+// Tarama sonucu gelen cihazları kutu halinde listele
+function displayScannedDevices(devices) {
+    const scannedListDiv = document.getElementById("scanned-device-list");
+    scannedListDiv.innerHTML = ""; // Önce temizle
+
+    devices.forEach(device => {
+        const deviceCard = document.createElement("div");
+        deviceCard.classList.add("device-card");
+        deviceCard.innerHTML = `
+            <p><strong>${device.name}</strong></p>
+            <p>IP: ${device.ip}</p>
+            <p>MAC: ${device.mac}</p>
+            <button onclick="addDevice('${device.name}', '${device.ip}', '${device.mac}')">Add</button>
+        `;
+        scannedListDiv.appendChild(deviceCard);
+    });
+}
+
+function addDevice(name, ip, mac) {
+    const device = {
+        id: Date.now(), // benzersiz ID
+        name,
+        ip,
+        mac
+    };
+    ipcRenderer.send("add-device", device);
+}
+
+//  Kayıtlı cihazları göster
 async function loadDevices() {
     const devices = await ipcRenderer.invoke("get-device-list");
+
     const deviceListDiv = document.getElementById("device-list");
     deviceListDiv.innerHTML = "";
 
     devices.forEach(device => {
-        const deviceItem = document.createElement("div");
-        deviceItem.classList.add("device-item");
-        deviceItem.innerHTML = `
+        const deviceBox = document.createElement("div");
+        deviceBox.classList.add("device-card");
+        deviceBox.innerHTML = `
             <p><strong>${device.name}</strong></p>
             <p>IP: ${device.ip}</p>
             <p>MAC: ${device.mac}</p>
             <button onclick="removeDevice('${device.mac}')">Remove</button>
         `;
-        deviceListDiv.appendChild(deviceItem);
+        deviceListDiv.appendChild(deviceBox);
     });
 }
 
-// Cihaz sil butonu işlevi
+// Cihazı sil
 function removeDevice(mac) {
     ipcRenderer.send("remove-device", mac);
 }
 
-// Liste güncellenince tekrar yükle
+// Liste değiştiğinde güncelle
 ipcRenderer.on("devices-list", () => {
     loadDevices();
 });
 
-// 🔍 Search Device butonu işlevi — tarama başlat
-document.getElementById("search-device").addEventListener("click", async function () {
-    const button = this;
-    button.textContent = "Searching...";
-    button.disabled = true;
-
-    try {
-        const results = await ipcRenderer.invoke("scan-network");
-
-        const deviceListDiv = document.getElementById("device-list");
-        deviceListDiv.innerHTML = "";
-
-        if (results.length === 0) {
-            deviceListDiv.innerHTML = "<p>No devices found.</p>";
-        } else {
-            results.forEach(device => {
-                const item = document.createElement("div");
-                item.classList.add("device-item");
-                item.innerHTML = `
-                    <p><strong>${device.name}</strong></p>
-                    <p>IP: ${device.ip}</p>
-                    <p>MAC: ${device.mac}</p>
-                `;
-                deviceListDiv.appendChild(item);
-            });
-        }
-    } catch (error) {
-        console.error("Tarama hatası:", error);
-    } finally {
-        button.textContent = "Search Device";
-        button.disabled = false;
-    }
-});
+// Fonksiyonları window'a atayarak HTML'den çağrılabilir hale getir
+window.addDevice = addDevice;
+window.removeDevice = removeDevice;

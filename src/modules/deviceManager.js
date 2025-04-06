@@ -1,6 +1,5 @@
 const fs = require("fs");
 const path = require("path");
-const { getMacAddress } = require("./macFinder"); // Yeni eklenen MAC bulma fonksiyonu
 
 const filePath = path.join(__dirname, "devices.json");
 
@@ -29,26 +28,17 @@ function saveDevices(devices) {
     }
 }
 
-// Yeni cihaz ekleme
-async function addDevice(ip) {
-    let devices = loadDevices();
+// Yeni cihaz ekleme (renderer.js'den gelen tüm nesneyi alacak şekilde güncellendi)
+function addDevice(device) {
+    const devices = loadDevices();
 
-    // Eğer cihaz zaten kayıtlıysa ekleme
-    if (devices.some(device => device.ip === ip)) {
-        console.log(`Cihaz zaten kayıtlı: ${ip}`);
-        return;
+    const exists = devices.some(d => d.mac === device.mac);
+    if (!exists) {
+        devices.push(device);
+        saveDevices(devices);
+    } else {
+        console.log("Cihaz zaten kayıtlı!");
     }
-
-    // MAC adresini al
-    const mac = await getMacAddress(ip);
-    if (!mac) {
-        console.log(`MAC adresi bulunamadı: ${ip}, listeye eklenmedi.`);
-        return;
-    }
-
-    const newDevice = { id: devices.length + 1, ip, mac };
-    devices.push(newDevice);
-    saveDevices(devices);
 }
 
 // Cihazları listeleme fonksiyonu
