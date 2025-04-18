@@ -130,5 +130,4 @@ dist
 .pnp.*
 
 # hide database
-
 src/modules/devices.db
