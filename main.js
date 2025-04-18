@@ -34,8 +34,8 @@ ipcMain.handle("scan-network", async () => {
 });
 
 // Listeyi getir
-ipcMain.handle("get-device-list", () => {
-    return deviceManager.listDevices();
+ipcMain.handle("get-device-list", async () => {
+    return await deviceManager.listDevices();
 });
 
 // Cihaz ekle
@@ -45,7 +45,8 @@ ipcMain.on("add-device", (event, device) => {
 });
 
 // Cihaz sil
-ipcMain.on("remove-device", (event, mac) => {
-    deviceManager.removeDevice(mac);
-    event.sender.send("devices-list", deviceManager.listDevices());
+ipcMain.on("remove-device", async (event, mac) => {
+    await deviceManager.removeDevice(mac);
+    const updatedList = await deviceManager.listDevices();
+    event.sender.send("devices-list", updatedList);
 });

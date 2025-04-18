@@ -41,19 +41,21 @@ document.addEventListener("DOMContentLoaded", function () {
     loadDevices(); // Sayfa yüklenince device listesi
 });
 
-// Tarama sonucu gelen cihazları kutu halinde listele
 function displayScannedDevices(devices) {
     const scannedListDiv = document.getElementById("scanned-device-list");
     scannedListDiv.innerHTML = ""; // Önce temizle
 
-    devices.forEach(device => {
+    devices.forEach((device, index) => {
+        let deviceName = device.name;
+        if (!deviceName || deviceName.toLowerCase() === "unknown") {
+            deviceName = `Device ${index + 1}`;
+        }
+
         const deviceCard = document.createElement("div");
         deviceCard.classList.add("device-card");
         deviceCard.innerHTML = `
-            <p><strong>${device.name}</strong></p>
-            <p>IP: ${device.ip}</p>
-            <p>MAC: ${device.mac}</p>
-            <button onclick="addDevice('${device.name}', '${device.ip}', '${device.mac}')">Add</button>
+            <p><strong>${deviceName}</strong></p>
+            <button onclick="addDevice('${deviceName}', '${device.ip}', '${device.mac}')">Add</button>
         `;
         scannedListDiv.appendChild(deviceCard);
     });
@@ -81,8 +83,6 @@ async function loadDevices() {
         deviceBox.classList.add("device-card");
         deviceBox.innerHTML = `
             <p><strong>${device.name}</strong></p>
-            <p>IP: ${device.ip}</p>
-            <p>MAC: ${device.mac}</p>
             <button onclick="removeDevice('${device.mac}')">Remove</button>
         `;
         deviceListDiv.appendChild(deviceBox);

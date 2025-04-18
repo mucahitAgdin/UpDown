@@ -1,56 +1,45 @@
-const fs = require("fs");
-const path = require("path");
+// src/modules/deviceManager.js
+const db = require("./database");
 
-const filePath = path.join(__dirname, "devices.json");
-
-// JSON dosyasını oku 
-function loadDevices() {
-    try {
-        if (!fs.existsSync(filePath)) {
-            return [];
-        }
-
-        const data = fs.readFileSync(filePath, "utf8");
-        return JSON.parse(data);
-    } catch (error) {
-        console.error("Hata: devices.json okunamadı!", error);
-        return [];
-    }
-}
-
-// JSON dosyasına yaz
-function saveDevices(devices) {
-    try {
-        fs.writeFileSync(filePath, JSON.stringify(devices, null, 4));
-        console.log("Cihazlar başarıyla kaydedildi.");
-    } catch (error) {
-        console.error("Hata: devices.json yazılamadı!", error);
-    }
-}
-
-// Yeni cihaz ekleme (renderer.js'den gelen tüm nesneyi alacak şekilde güncellendi)
+// yeni cihaz ekle
 function addDevice(device) {
-    const devices = loadDevices();
+    const {name, ip, mac} = device;
 
-    const exists = devices.some(d => d.mac === device.mac);
-    if (!exists) {
-        devices.push(device);
-        saveDevices(devices);
-    } else {
-        console.log("Cihaz zaten kayıtlı!");
-    }
+    const stmt = `INSERT OR IGNORE INTO devices (name, ip, mac) VALUES(?, ?, ?)`;
+    db.run(stmt, [name, ip, mac], function (err){
+        if (err){
+            console.error("cihaz eklenirken hata:", err.message);
+        } else if (this.changes == 0){
+            console.log("cihaz zaten mevcut:");
+        } else {
+            console.log("Yeni cihaz eklendi:", device);
+        }
+    });
 }
 
-// Cihazları listeleme fonksiyonu
-function listDevices() {
-    return loadDevices();
+// tüm cihazlari listele
+function listDevices(){
+    return new Promise((resolve, reject) => {
+        db.all("SELECT * FROM devices", [], (err,rows) => {
+            if (err){
+                console.error("Listeleme hatasi: ", err.message);
+                reject([]);
+            } else {
+                resolve(rows);
+            }
+        });
+    });
 }
 
-// Cihaz silme fonksiyonu
+// mac adresine gore cihazi sil
 function removeDevice(mac) {
-    let devices = loadDevices();
-    devices = devices.filter(device => device.mac !== mac);
-    saveDevices(devices);
+    db.run("DELETE FROM devices WHERE mac = ?", [mac], function (err){
+        if (err) {
+            console.error("cihaz silinirken hata: ", err.message);
+        } else {
+            console.log("cihaz silindi: ", mac);
+        }
+    });
 }
 
-module.exports = { addDevice, listDevices, removeDevice };
+module.exports = {addDevice, listDevices, removeDevice};
