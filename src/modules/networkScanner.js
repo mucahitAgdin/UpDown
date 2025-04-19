@@ -1,29 +1,38 @@
+// networkScanner.js (Güncellendi)
 const { exec } = require("child_process");
 
 function scanNetwork() {
-    return new Promise((resolve, reject) => {
-        exec("arp -a", (error, stdout) => {
-            if (error) {
-                return reject(error);
-            }
+  return new Promise((resolve, reject) => {
+    const platform = process.platform;
+    // Platforma göre ARP komutu seç
+    const command = platform === 'win32' ? 'arp -a' : 'arp -n';
+    
+    exec(command, (error, stdout) => {
+      if (error) return reject(error);
 
-            const lines = stdout.split("\n");
-            const devices = [];
+      const devices = [];
+      const ipRegex = /(\d+\.\d+\.\d+\.\d+)/g;
+      const macRegex = /((?:[0-9A-Fa-f]{2}[:-]){5}[0-9A-Fa-f]{2})/g;
 
-            for (const line of lines) {
-                const match = line.match(/\(?(\d+\.\d+\.\d+\.\d+)\)?\s+(([a-fA-F0-9]{2}[-:]){5}[a-fA-F0-9]{2})/);
-                if (match) {
-                    devices.push({
-                        ip: match[1],
-                        mac: match[2],
-                        name: "Unknown"
-                    });
-                }
-            }
+      // Satırları işle
+      stdout.split('\n').forEach(line => {
+        const ipMatch = line.match(ipRegex);
+        const macMatch = line.match(macRegex);
+        
+        if (ipMatch && macMatch) {
+          // MAC adresini ":" ile standardize et
+          const formattedMac = macMatch[0].replace(/-/g, ':').toUpperCase();
+          devices.push({
+            ip: ipMatch[0],
+            mac: formattedMac,
+            name: "Unknown"
+          });
+        }
+      });
 
-            resolve(devices);
-        });
+      resolve(devices);
     });
+  });
 }
 
 module.exports = { scanNetwork };

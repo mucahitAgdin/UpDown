@@ -1,45 +1,39 @@
 // src/modules/deviceManager.js
 const db = require("./database");
 
-// yeni cihaz ekle
-function addDevice(device) {
-    const {name, ip, mac} = device;
-
-    const stmt = `INSERT OR IGNORE INTO devices (name, ip, mac) VALUES(?, ?, ?)`;
-    db.run(stmt, [name, ip, mac], function (err){
-        if (err){
-            console.error("cihaz eklenirken hata:", err.message);
-        } else if (this.changes == 0){
-            console.log("cihaz zaten mevcut:");
-        } else {
-            console.log("Yeni cihaz eklendi:", device);
-        }
-    });
-}
-
-// tüm cihazlari listele
-function listDevices(){
+class DeviceManager {
+  // Cihaz ekle (Promise tabanlı)
+  async addDevice(device) {
+    const { name, ip, mac } = device;
     return new Promise((resolve, reject) => {
-        db.all("SELECT * FROM devices", [], (err,rows) => {
-            if (err){
-                console.error("Listeleme hatasi: ", err.message);
-                reject([]);
-            } else {
-                resolve(rows);
-            }
-        });
+      const stmt = `INSERT OR IGNORE INTO devices (name, ip, mac) VALUES (?, ?, ?)`;
+      db.run(stmt, [name, ip, mac], function (err) {
+        if (err) reject(err);
+        else resolve(this.changes > 0); // Değişiklik varsa true
+      });
     });
+  }
+
+  // Cihazları listele
+  async listDevices() {
+    return new Promise((resolve, reject) => {
+      db.all("SELECT * FROM devices", [], (err, rows) => {
+        if (err) reject(err);
+        else resolve(rows);
+      });
+    });
+  }
+
+  // Cihaz sil
+  async removeDevice(mac) {
+    return new Promise((resolve, reject) => {
+      db.run("DELETE FROM devices WHERE mac = ?", [mac], function (err) {
+        if (err) reject(err);
+        else resolve(this.changes > 0);
+      });
+    });
+  }
 }
 
-// mac adresine gore cihazi sil
-function removeDevice(mac) {
-    db.run("DELETE FROM devices WHERE mac = ?", [mac], function (err){
-        if (err) {
-            console.error("cihaz silinirken hata: ", err.message);
-        } else {
-            console.log("cihaz silindi: ", mac);
-        }
-    });
-}
-
-module.exports = {addDevice, listDevices, removeDevice};
+// Singleton örneği dışa aktar
+module.exports = new DeviceManager();
