@@ -2,6 +2,7 @@ const { app, BrowserWindow, ipcMain } = require("electron");
 const path = require("path");
 const deviceManager = require("./src/modules/deviceManager");
 const { scanNetwork } = require("./src/modules/networkScanner");
+const { wakeDevice } = require("./src/services/wolService");
 
 function createWindow() {
     const mainWindow = new BrowserWindow({
@@ -50,3 +51,10 @@ ipcMain.on("remove-device", async (event, mac) => {
     const updatedList = await deviceManager.listDevices();
     event.sender.send("devices-list", updatedList);
 });
+
+
+ipcMain.handle("wake-device", async (event, macAddress) => {
+    return await wakeDevice(macAddress);
+});
+
+

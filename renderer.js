@@ -6,13 +6,11 @@ document.addEventListener("DOMContentLoaded", function () {
     const toggleButton = document.getElementById("toggleSidebar");
     const content = document.querySelector(".content");
 
-    // Sidebar aç/kapa
     toggleButton.addEventListener("click", function () {
         sidebar.classList.toggle("show");
         content.style.marginLeft = sidebar.classList.contains("show") ? "250px" : "0";
     });
 
-    // Sidebar dışına tıklanınca kapat
     document.addEventListener("click", function (event) {
         if (!sidebar.contains(event.target) && !toggleButton.contains(event.target)) {
             sidebar.classList.remove("show");
@@ -20,11 +18,10 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 
-    // Sekmeler arasında geçiş
     document.getElementById("btn-computers").addEventListener("click", () => {
         document.getElementById("computers-section").style.display = "block";
         document.getElementById("find-device-section").style.display = "none";
-        loadDevices(); // Devices sekmesine geçince güncelle
+        loadDevices();
     });
 
     document.getElementById("btn-find-device").addEventListener("click", () => {
@@ -32,18 +29,35 @@ document.addEventListener("DOMContentLoaded", function () {
         document.getElementById("find-device-section").style.display = "block";
     });
 
-    // Tarama butonuna tıklanınca ağda cihazları ara
     document.getElementById("search-device").addEventListener("click", async () => {
         const scannedDevices = await ipcRenderer.invoke("scan-network");
         displayScannedDevices(scannedDevices);
     });
 
-    loadDevices(); // Sayfa yüklenince device listesi
+    loadDevices();
 });
+
+
+function showToast(message, type = "info") {
+    const toast = document.createElement("div");
+    toast.classList.add("toast");
+
+    if (type === "success") toast.style.backgroundColor = "#4caf50";
+    else if (type === "error") toast.style.backgroundColor = "#f44336";
+    else if (type === "warning") toast.style.backgroundColor = "#ff9800";
+
+    toast.innerText = message;
+
+    document.getElementById("toast-container").appendChild(toast);
+
+    setTimeout(() => {
+        toast.remove();
+    }, 4000);
+}
 
 function displayScannedDevices(devices) {
     const scannedListDiv = document.getElementById("scanned-device-list");
-    scannedListDiv.innerHTML = ""; // Önce temizle
+    scannedListDiv.innerHTML = "";
 
     devices.forEach((device, index) => {
         let deviceName = device.name;
@@ -61,20 +75,28 @@ function displayScannedDevices(devices) {
     });
 }
 
-function addDevice(name, ip, mac) {
+async function addDevice(name, ip, mac) {
+    const existingDevices = await ipcRenderer.invoke("get-device-list");
+    const alreadyExists = existingDevices.some(d => d.mac === mac);
+
+    if (alreadyExists) {
+        showToast("Bu cihaz zaten listede var!", "warning");
+        return;
+    }
+
     const device = {
-        id: Date.now(), // benzersiz ID
+        id: Date.now(),
         name,
         ip,
         mac
     };
+
     ipcRenderer.send("add-device", device);
+    showToast("Cihaz başarıyla eklendi!", "success");
 }
 
-//  Kayıtlı cihazları göster
 async function loadDevices() {
     const devices = await ipcRenderer.invoke("get-device-list");
-
     const deviceListDiv = document.getElementById("device-list");
     deviceListDiv.innerHTML = "";
 
@@ -83,22 +105,39 @@ async function loadDevices() {
         deviceBox.classList.add("device-card");
         deviceBox.innerHTML = `
             <p><strong>${device.name}</strong></p>
+            <button onclick="wakeDevice('${device.mac}')">Wake</button>
             <button onclick="removeDevice('${device.mac}')">Remove</button>
         `;
         deviceListDiv.appendChild(deviceBox);
     });
+    
 }
 
-// Cihazı sil
 function removeDevice(mac) {
     ipcRenderer.send("remove-device", mac);
+    showToast("Cihaz silindi", "info");
 }
 
-// Liste değiştiğinde güncelle
 ipcRenderer.on("devices-list", () => {
     loadDevices();
 });
 
-// Fonksiyonları window'a atayarak HTML'den çağrılabilir hale getir
+async function wakeDevice(mac) {
+    try {
+        const result = await ipcRenderer.invoke("wake-device", mac);
+        if (result.success) {
+            showToast("Cihaz uyandırıldı!", "success");
+        } else {
+            showToast("Uyandırma başarısız!", "error");
+        }
+    } catch (error) {
+        console.error("Wake error:", error);
+        showToast("Bir hata oluştu!", "error");
+    }
+}
+
+
+
+window.wakeDevice = wakeDevice; // dışarıdan çağırmak için
 window.addDevice = addDevice;
 window.removeDevice = removeDevice;

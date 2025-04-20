@@ -16,6 +16,7 @@
     "better-sqlite3": "^11.9.1",
     "ping": "^0.4.4",
     "sqlite3": "^5.1.7",
+    "wake_on_lan": "^1.0.0",
     "wake-on-lan": "^0.1.0",
     "wol": "^1.0.7"
   }
