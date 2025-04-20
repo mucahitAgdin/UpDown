@@ -1,5 +1,5 @@
 // src/modules/deviceManager.js
-const db = require("./database");
+const db = require("../database/database");
 
 // yeni cihaz ekle
 function addDevice(device) {
