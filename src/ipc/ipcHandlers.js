@@ -30,3 +30,5 @@ ipcMain.on("remove-device", async (event, mac) => {
 ipcMain.handle("wake-device", async (event, macAddress) => {
     return await wakeDevice(macAddress);
 });
+
+

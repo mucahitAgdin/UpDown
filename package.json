@@ -14,6 +14,7 @@
   },
   "dependencies": {
     "better-sqlite3": "^11.9.1",
+    "node-ssh": "^13.2.1",
     "ping": "^0.4.4",
     "sqlite3": "^5.1.7",
     "wake_on_lan": "^1.0.0",
