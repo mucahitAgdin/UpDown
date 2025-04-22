@@ -2,7 +2,7 @@ const { app, BrowserWindow } = require("electron");
 const path = require("path");
 
 // IPC handler'ları yükle
-require("../ipc/ipcHandlers");
+require("../handlers/ipcHandlers");
 
 function createWindow() {
     const mainWindow = new BrowserWindow({

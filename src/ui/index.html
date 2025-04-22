@@ -36,8 +36,24 @@
             </section>
         </main>
     </div>
-            <div id="toast-container"></div>
+    <div id="toast-container"></div>
     <script src="renderer.js"></script>
+
+
+    <div id="ssh-modal">
+        <h3>Cihazı Kapat</h3>
+        <input type="text" id="ssh-username" placeholder="SSH Kullanıcı Adı">
+        <input type="password" id="ssh-password" placeholder="SSH Şifresi">
+        <select id="ssh-os">
+            <option value="windows">Windows</option>
+            <option value="linux">Linux</option>
+            <option value="mac">Mac OS</option>
+        </select>
+        <div class="button-container">
+            <button onclick="confirmShutdown()">Onayla</button>
+            <button onclick="closeSshModal()">İptal</button>
+        </div>
+    </div>
 </body>
 
 </html>

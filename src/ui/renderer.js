@@ -1,80 +1,106 @@
 const { ipcRenderer } = require("electron");
 
-// DOM hazır olunca başlat
-document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener("DOMContentLoaded", () => {
     const sidebar = document.querySelector(".sidebar");
     const toggleButton = document.getElementById("toggleSidebar");
     const content = document.querySelector(".content");
 
-    toggleButton.addEventListener("click", function () {
+    const computersBtn = document.getElementById("btn-computers");
+    const findDeviceBtn = document.getElementById("btn-find-device");
+
+    const searchDeviceBtn = document.getElementById("search-device");
+
+    // Sidebar toggle
+    toggleButton.addEventListener("click", () => {
         sidebar.classList.toggle("show");
         content.style.marginLeft = sidebar.classList.contains("show") ? "250px" : "0";
     });
 
-    document.addEventListener("click", function (event) {
+    // Dışarı tıklanınca sidebar kapansın
+    document.addEventListener("click", (event) => {
         if (!sidebar.contains(event.target) && !toggleButton.contains(event.target)) {
             sidebar.classList.remove("show");
             content.style.marginLeft = "0";
         }
     });
 
-    document.getElementById("btn-computers").addEventListener("click", () => {
+    // Cihazlar sekmesi
+    computersBtn.addEventListener("click", () => {
         document.getElementById("computers-section").style.display = "block";
         document.getElementById("find-device-section").style.display = "none";
         loadDevices();
     });
 
-    document.getElementById("btn-find-device").addEventListener("click", () => {
+    // Cihaz bul sekmesi
+    findDeviceBtn.addEventListener("click", () => {
         document.getElementById("computers-section").style.display = "none";
         document.getElementById("find-device-section").style.display = "block";
     });
 
-    document.getElementById("search-device").addEventListener("click", async () => {
+    // Ağ tarama
+    searchDeviceBtn.addEventListener("click", async () => {
         const scannedDevices = await ipcRenderer.invoke("scan-network");
         displayScannedDevices(scannedDevices);
     });
 
+    // Sayfa yüklenince cihazları getir
     loadDevices();
 });
 
-
+/**
+ * Toast mesajı
+ */
 function showToast(message, type = "info") {
     const toast = document.createElement("div");
     toast.classList.add("toast");
 
-    if (type === "success") toast.style.backgroundColor = "#4caf50";
-    else if (type === "error") toast.style.backgroundColor = "#f44336";
-    else if (type === "warning") toast.style.backgroundColor = "#ff9800";
+    const colors = {
+        success: "#4caf50",
+        error: "#f44336",
+        warning: "#ff9800",
+        info: "#2196f3"
+    };
 
+    toast.style.backgroundColor = colors[type] || colors.info;
     toast.innerText = message;
 
     document.getElementById("toast-container").appendChild(toast);
 
-    setTimeout(() => {
-        toast.remove();
-    }, 4000);
+    setTimeout(() => toast.remove(), 4000);
 }
 
+/**
+ * Taranan cihazları göster
+ */
 function displayScannedDevices(devices) {
     const scannedListDiv = document.getElementById("scanned-device-list");
     scannedListDiv.innerHTML = "";
 
     devices.forEach((device, index) => {
-        let deviceName = device.name;
-        if (!deviceName || deviceName.toLowerCase() === "unknown") {
-            deviceName = `Device ${index + 1}`;
-        }
+        const deviceName = device.name?.toLowerCase() === "unknown" || !device.name
+            ? `Device ${index + 1}`
+            : device.name;
 
         const deviceCard = document.createElement("div");
         deviceCard.classList.add("device-card");
-        deviceCard.innerHTML = `
-            <p><strong>${deviceName}</strong></p>
-            <button onclick="addDevice('${deviceName}', '${device.ip}', '${device.mac}')">Add</button>
-        `;
+
+        const nameP = document.createElement("p");
+        nameP.innerHTML = `<strong>${deviceName}</strong>`;
+        const ipP = document.createElement("p");
+        ipP.textContent = `IP: ${device.ip}`;
+
+        const addButton = document.createElement("button");
+        addButton.textContent = "Add";
+        addButton.addEventListener("click", () => addDevice(deviceName, device.ip, device.mac));
+
+        deviceCard.append(nameP, ipP, addButton);
         scannedListDiv.appendChild(deviceCard);
     });
 }
 
+/**
+ * Yeni cihaz ekle
+ */
 async function addDevice(name, ip, mac) {
     const existingDevices = await ipcRenderer.invoke("get-device-list");
     const alreadyExists = existingDevices.some(d => d.mac === mac);
@@ -93,51 +119,99 @@ async function addDevice(name, ip, mac) {
 
     ipcRenderer.send("add-device", device);
     showToast("Cihaz başarıyla eklendi!", "success");
+    loadDevices();
 }
 
+/**
+ * Cihazları yükle
+ */
 async function loadDevices() {
     const devices = await ipcRenderer.invoke("get-device-list");
     const deviceListDiv = document.getElementById("device-list");
     deviceListDiv.innerHTML = "";
 
     devices.forEach(device => {
-        const deviceBox = document.createElement("div");
-        deviceBox.classList.add("device-card");
-        deviceBox.innerHTML = `
-            <p><strong>${device.name}</strong></p>
-            <button onclick="wakeDevice('${device.mac}')">Wake</button>
-            <button onclick="removeDevice('${device.mac}')">Remove</button>
-        `;
-        deviceListDiv.appendChild(deviceBox);
+        const deviceCard = document.createElement("div");
+        deviceCard.classList.add("device-card");
+
+        const nameP = document.createElement("p");
+        nameP.innerHTML = `<strong>${device.name}</strong>`;
+        const ipP = document.createElement("p");
+        ipP.textContent = `IP: ${device.ip}`;
+
+        const wakeBtn = document.createElement("button");
+        wakeBtn.textContent = "Wake";
+        wakeBtn.addEventListener("click", () => wakeDevice(device.mac));
+
+        const shutdownBtn = document.createElement("button");
+        shutdownBtn.textContent = "Shutdown";
+        shutdownBtn.addEventListener("click", () => openSshModal(device.ip));
+
+        const removeBtn = document.createElement("button");
+        removeBtn.textContent = "Remove";
+        removeBtn.addEventListener("click", () => removeDevice(device.mac));
+
+        deviceCard.append(nameP, ipP, wakeBtn, shutdownBtn, removeBtn);
+        deviceListDiv.appendChild(deviceCard);
     });
-    
 }
 
+/**
+ * Cihaz sil
+ */
 function removeDevice(mac) {
     ipcRenderer.send("remove-device", mac);
     showToast("Cihaz silindi", "info");
+    loadDevices();
 }
 
-ipcRenderer.on("devices-list", () => {
-    loadDevices();
-});
-
+/**
+ * Wake-on-LAN gönder
+ */
 async function wakeDevice(mac) {
     try {
         const result = await ipcRenderer.invoke("wake-device", mac);
-        if (result.success) {
-            showToast("Cihaz uyandırıldı!", "success");
-        } else {
-            showToast("Uyandırma başarısız!", "error");
-        }
+        showToast(result.success ? "Cihaz uyandırıldı!" : "Uyandırma başarısız!", result.success ? "success" : "error");
     } catch (error) {
         console.error("Wake error:", error);
         showToast("Bir hata oluştu!", "error");
     }
 }
 
+// SSH modal işlemleri
+let selectedDeviceIp = "";
 
+function openSshModal(ip) {
+    selectedDeviceIp = ip;
+    document.getElementById("ssh-modal").style.display = "block";
+}
 
-window.wakeDevice = wakeDevice; // dışarıdan çağırmak için
-window.addDevice = addDevice;
-window.removeDevice = removeDevice;
+function closeSshModal() {
+    document.getElementById("ssh-modal").style.display = "none";
+}
+
+function confirmShutdown() {
+    const username = document.getElementById('ssh-username').value;
+    const password = document.getElementById('ssh-password').value;
+    const osType = document.getElementById('ssh-os').value;
+
+    if (!selectedDeviceIp || !username || !password || !osType) {
+        alert("Lütfen tüm alanları doldurun!");
+        return;
+    }
+
+    window.electronAPI.shutdownDevice({
+        ip: selectedDeviceIp,
+        username,
+        password,
+        osType
+    }).then(result => {
+        alert(result);
+    });
+
+    closeSshModal();
+}
+
+// Dışarıdan erişim gerekirse
+window.confirmShutdown = confirmShutdown;
+window.closeSshModal = closeSshModal;

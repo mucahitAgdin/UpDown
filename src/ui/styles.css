@@ -4,7 +4,8 @@ body {
   padding: 0;
   display: flex;
   height: 100vh;
-  background-color: #e0c4b8; /* Cream */
+  background-color: #e0c4b8;
+  /* Cream */
   color: #333;
 }
 
@@ -16,7 +17,8 @@ body {
 .sidebar {
   width: 250px;
   height: 100vh;
-  background: #c25b6a; /* Hot Pink */
+  background: #c25b6a;
+  /* Hot Pink */
   position: fixed;
   top: 0;
   left: -250px;
@@ -49,14 +51,16 @@ body {
 }
 
 .sidebar ul li a:hover {
-  background: #b07b8b; /* Rosewater */
+  background: #b07b8b;
+  /* Rosewater */
 }
 
 #toggleSidebar {
   position: absolute;
   top: 20px;
   left: 20px;
-  background: #c25b6a; /* Hot Pink */
+  background: #c25b6a;
+  /* Hot Pink */
   color: white;
   border: none;
   padding: 10px;
@@ -66,13 +70,15 @@ body {
 }
 
 #toggleSidebar:hover {
-  background: #b07b8b; /* Rosewater */
+  background: #b07b8b;
+  /* Rosewater */
 }
 
 .content {
   flex-grow: 1;
   padding: 50px;
-  background-color: #88b8a3; /* Spearmint */
+  background-color: #88b8a3;
+  /* Spearmint */
   margin-left: 250px;
   transition: margin-left 0.3s ease-in-out;
 }
@@ -82,7 +88,8 @@ body {
 }
 
 #search-device {
-  background-color: #c25b6a; /* Hot Pink */
+  background-color: #c25b6a;
+  /* Hot Pink */
   border: none;
   padding: 10px;
   cursor: pointer;
@@ -92,12 +99,13 @@ body {
 }
 
 #search-device:hover {
-  background-color: #b07b8b; /* Rosewater */
+  background-color: #b07b8b;
+  /* Rosewater */
 }
 
 #device-list {
   margin-top: 20px;
-  background: #ffffff55; 
+  background: #ffffff55;
   padding: 10px;
   border-radius: 5px;
 }
@@ -158,21 +166,67 @@ body {
 
 @keyframes fadeInOut {
   0% {
-      opacity: 0;
-      transform: translateX(100%);
+    opacity: 0;
+    transform: translateX(100%);
   }
+
   10% {
-      opacity: 1;
-      transform: translateX(0);
+    opacity: 1;
+    transform: translateX(0);
   }
+
   90% {
-      opacity: 1;
-      transform: translateX(0);
+    opacity: 1;
+    transform: translateX(0);
   }
+
   100% {
-      opacity: 0;
-      transform: translateX(100%);
+    opacity: 0;
+    transform: translateX(100%);
   }
 }
 
 
+/* SSH Modal Stili */
+#ssh-modal {
+  display: none;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: white;
+  padding: 20px;
+  z-index: 1000;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+  width: 300px;
+}
+
+#ssh-modal input,
+#ssh-modal select {
+  margin: 10px 0;
+  padding: 8px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+#ssh-modal .button-container {
+  display: flex;
+  justify-content: space-between;
+}
+
+#ssh-modal button {
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  border: none;
+}
+
+#ssh-modal button:first-child {
+  background: #c25b6a;
+  color: white;
+}
+
+#ssh-modal button:last-child {
+  background: #ccc;
+}

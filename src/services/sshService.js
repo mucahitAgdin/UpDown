@@ -1,52 +1,45 @@
-// src/services/sshService.js
+// sshService.js
 
-const { NodeSSH } = require("node-ssh");
+const { NodeSSH } = require('node-ssh');
 const ssh = new NodeSSH();
 
-
-
 /**
- * SSH bağlantısı kurar ve komut çalıştırır.
- * @param {string} host - Hedef IP adresi
- * @param {string} username - Kullanıcı adı
- * @param {string} password - Parola
- * @param {string} command - Gönderilecek komut
- * @returns {Promise<object>} stdout ve stderr içeren cevap
+ * SSH ile cihaza bağlanıp kapatma komutu gönderir
+ * @param {string} ip - Cihazın IP adresi
+ * @param {string} username - SSH kullanıcı adı
+ * @param {string} password - SSH şifresi
+ * @param {string} osType - windows | linux | mac
+ * @returns {Promise<string>}
  */
-async function executeSSHCommand(host, username, password, command) {
+async function shutdown(ip, username, password, osType) {
     try {
-        await ssh.connect({ host, username, password });
+        await ssh.connect({
+            host: ip,
+            username,
+            password
+        });
+
+        let command = '';
+        switch (osType.toLowerCase()) {
+            case 'windows':
+                command = 'shutdown /s /t 0';
+                break;
+            case 'linux':
+                command = 'shutdown now';
+                break;
+            case 'mac':
+                command = 'sudo shutdown -h now';
+                break;
+            default:
+                throw new Error('Bilinmeyen işletim sistemi türü.');
+        }
+
         const result = await ssh.execCommand(command);
-        return result;
-    } catch (error) {
-        console.error("SSH bağlantı veya komut hatası:", error);
-        throw error;
+        ssh.dispose();
+        return result.stderr || result.stdout || 'Komut gönderildi.';
+    } catch (err) {
+        return `Hata: ${err.message}`;
     }
 }
 
-/**
- * Cihazı SSH ile kapatır.
- * @param {string} host - IP adresi
- * @param {string} username - Kullanıcı adı
- * @param {string} password - Parola
- * @param {string} os - İşletim sistemi ("linux", "windows", "mac")
- */
-async function shutdownDevice(host, username, password, os) {
-    let shutdownCommand;
-
-    if (os === "linux" || os === "mac") {
-        shutdownCommand = "shutdown now";
-    } else if (os === "windows") {
-        shutdownCommand = "shutdown /s /t 0";
-    } else {
-        throw new Error("Desteklenmeyen işletim sistemi");
-    }
-
-    return await executeSSHCommand(host, username, password, shutdownCommand);
-}
-
-// EXPORTLAR
-module.exports = {
-    executeSSHCommand,
-    shutdownDevice
-};
+module.exports = { shutdown };
