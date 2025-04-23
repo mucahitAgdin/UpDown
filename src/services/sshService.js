@@ -24,12 +24,13 @@ async function executeSSHCommand({ ip, username, password, command, osType }) {
 
     // OS'e özel komut formatı
     if (osType === 'windows') {
-      command = `powershell -Command "& {${command}}"`; // PowerShell wrapper
+      command = `powershell -Command "Start-Process powershell 
+      -ArgumentList '-Command','${command.replace(/"/g, '\\"')}' -Verb RunAs"`;
       console.log("[SSH] Windows komut formatı:", command);
     }
 
     const result = await ssh.execCommand(command);
-    
+
     return {
       success: !result.stderr,
       output: result.stdout || result.stderr
@@ -39,10 +40,10 @@ async function executeSSHCommand({ ip, username, password, command, osType }) {
       message: error.message,
       stack: error.stack
     });
-    
+
     return {
       success: false,
-      error: error.message.includes('timed out') 
+      error: error.message.includes('timed out')
         ? 'Bağlantı zaman aşımı. SSH servisi çalışıyor mu?'
         : 'Kimlik doğrulama başarısız'
     };

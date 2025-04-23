@@ -119,23 +119,18 @@ function displayScannedDevices(devices) {
  */
 async function addDevice(name, ip, mac) {
     try {
-        const existingDevices = await window.electronAPI.ipcRenderer.invoke("get-device-list");
-        const alreadyExists = existingDevices.some(d => d.mac === mac);
-
-        if (alreadyExists) {
-            showToast("Bu cihaz zaten listede var!", "warning");
-            return;
-        }
-
-        const device = { id: Date.now(), name, ip, mac };
-        window.electronAPI.ipcRenderer.send("add-device", device);
-        showToast("Cihaz başarıyla eklendi!", "success");
-        loadDevices();
+      const result = await window.electronAPI.addDevice({ name, ip, mac });
+      if (result.success) {
+        showToast("Cihaz eklendi", "success");
+        await loadDevices();
+      } else {
+        showToast(result.message || "Cihaz eklenemedi", "warning");
+      }
     } catch (error) {
-        console.error("Cihaz ekleme hatası:", error);
-        showToast("Cihaz eklenemedi!", "error");
+      console.error("Ekleme hatası:", error);
+      showToast("Cihaz eklenemedi!", "error");
     }
-}
+  }
 
 /**
  * CİHAZ LİSTESİNİ YÜKLE
@@ -183,11 +178,18 @@ async function loadDevices() {
  * CİHAZ SİLME
  * @param {string} mac - Silinecek cihazın MAC adresi
  */
-function removeDevice(mac) {
-    window.electronAPI.ipcRenderer.send("remove-device", mac);
-    showToast("Cihaz silindi", "info");
-    loadDevices();
-}
+async function removeDevice(mac) {
+    try {
+      const { success } = await window.electronAPI.removeDevice(mac);
+      if (success) {
+        showToast("Cihaz silindi", "info");
+        await loadDevices();
+      }
+    } catch (error) {
+      console.error("Silme hatası:", error);
+      showToast("Silme işlemi başarısız!", "error");
+    }
+  }
 
 /**
  * WAKE-ON-LAN İŞLEMİ

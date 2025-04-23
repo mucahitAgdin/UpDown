@@ -1,12 +1,17 @@
-// src/main/preload.js
 const { contextBridge, ipcRenderer } = require('electron');
 
-// Main process ile renderer process arasında güvenli iletişim köprüsü
+// Güvenli API erişimi
 contextBridge.exposeInMainWorld('electronAPI', {
-  /**
-   * SSH komutunu main process'e gönderir
-   * @param {object} config - { ip, username, password, command, osType }
-   * @returns {Promise<{success: boolean, output?: string, error?: string}>}
-   */
-  sendSSHCommand: (config) => ipcRenderer.invoke('send-ssh-command', config)
+  // Cihaz işlemleri
+  listDevices: () => ipcRenderer.invoke("get-device-list"),
+  addDevice: (device) => ipcRenderer.invoke("add-device", device),
+  removeDevice: (mac) => ipcRenderer.invoke("remove-device", mac),
+  
+  // Ağ operasyonları
+  scanNetwork: () => ipcRenderer.invoke("scan-network"),
+  getMacAddress: (ip) => ipcRenderer.invoke("get-mac-address", ip),
+  
+  // Uzak kontrol
+  wakeDevice: (mac) => ipcRenderer.invoke("wake-device", mac),
+  sendSSHCommand: (config) => ipcRenderer.invoke("send-ssh-command", config)
 });

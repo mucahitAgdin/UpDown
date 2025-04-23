@@ -1,45 +1,40 @@
-// src/modules/device/deviceManager.js
 const db = require("../database/database");
 
-// yeni cihaz ekle
-function addDevice(device) {
-    const {name, ip, mac} = device;
-
-    const stmt = `INSERT OR IGNORE INTO devices (name, ip, mac) VALUES(?, ?, ?)`;
-    db.run(stmt, [name, ip, mac], function (err){
-        if (err){
-            console.error("cihaz eklenirken hata:", err.message);
-        } else if (this.changes == 0){
-            console.log("cihaz zaten mevcut:");
-        } else {
-            console.log("Yeni cihaz eklendi:", device);
-        }
-    });
-}
-
-// tüm cihazlari listele
-function listDevices(){
-    return new Promise((resolve, reject) => {
-        db.all("SELECT * FROM devices", [], (err,rows) => {
-            if (err){
-                console.error("Listeleme hatasi: ", err.message);
-                reject([]);
-            } else {
-                resolve(rows);
-            }
+async function addDevice(device) {
+  return new Promise((resolve, reject) => {
+    const { name, ip, mac } = device;
+    db.run(
+      `INSERT OR IGNORE INTO devices (name, ip, mac) VALUES(?, ?, ?)`,
+      [name, ip, mac],
+      function (err) {
+        if (err) return reject(err);
+        resolve({
+          success: this.changes > 0,
+          message: this.changes > 0 
+            ? "Cihaz eklendi" 
+            : "Cihaz zaten mevcut"
         });
-    });
+      }
+    );
+  });
 }
 
-// mac adresine gore cihazi sil
-function removeDevice(mac) {
-    db.run("DELETE FROM devices WHERE mac = ?", [mac], function (err){
-        if (err) {
-            console.error("cihaz silinirken hata: ", err.message);
-        } else {
-            console.log("cihaz silindi: ", mac);
-        }
+async function listDevices() {
+  return new Promise((resolve, reject) => {
+    db.all("SELECT * FROM devices ORDER BY name ASC", [], (err, rows) => {
+      if (err) return reject(err);
+      resolve(rows);
     });
+  });
 }
 
-module.exports = {addDevice, listDevices, removeDevice};
+async function removeDevice(mac) {
+  return new Promise((resolve, reject) => {
+    db.run("DELETE FROM devices WHERE mac = ?", [mac], function (err) {
+      if (err) return reject(err);
+      resolve({ success: true, changes: this.changes });
+    });
+  });
+}
+
+module.exports = { addDevice, listDevices, removeDevice };

@@ -13,7 +13,7 @@ function scanNetwork() {
             const devices = [];
 
             for (const line of lines) {
-                const match = line.match(/\(?(\d+\.\d+\.\d+\.\d+)\)?\s+(([a-fA-F0-9]{2}[-:]){5}[a-fA-F0-9]{2})/);
+                const match = line.match(/(\d+\.\d+\.\d+\.\d+).*?(([0-9A-Fa-f]{2}[:-]){5}[0-9A-Fa-f]{2})/i);
                 if (match) {
                     devices.push({
                         ip: match[1],
