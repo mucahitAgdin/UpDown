@@ -35,8 +35,15 @@ ipcMain.handle("wake-device", async (event, macAddress) => {
     return await wakeDevice(macAddress);
 });
 
-
-// SSH Komutu Handler'ı
-ipcMain.handle("send-ssh-command", async (_, { ip, username, password, command, osType }) => {
-  return await executeSSHCommand({ ip, username, password, command, osType });
-});
+// SSH komut handler'ı
+ipcMain.handle("send-ssh-command", async (_, config) => {
+    console.log("[SSH] İstenen komut:", config.command);
+    try {
+      const result = await executeSSHCommand(config);
+      console.log("[SSH] Sonuç:", result);
+      return result;
+    } catch (error) {
+      console.error("[SSH] Kritik hata:", error);
+      return { success: false, error: error.message };
+    }
+  });

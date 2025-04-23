@@ -1,32 +1,37 @@
-//src/main/main.js:
-
+// src/main/main.js
 const { app, BrowserWindow } = require("electron");
 const path = require("path");
 
-// IPC handler'ları yükle
-require("../handlers/ipcHandlers");
-
 function createWindow() {
-    const mainWindow = new BrowserWindow({
-        width: 1000,
-        height: 700,
-        webPreferences: {
-            preload: path.join(__dirname, "preload.js"),
-            nodeIntegration: true,
-            contextIsolation: false,
-        }
-    });
+  const mainWindow = new BrowserWindow({
+    width: 1000,
+    height: 700,
+    webPreferences: {
+      preload: path.join(__dirname, "preload.js"), // ÖNEMLİ: Preload dosya yolu
+      contextIsolation: true, // Güvenlik için aktif
+      nodeIntegration: false // Güvenlik için pasif
+    }
+  });
 
-    mainWindow.loadFile("src/ui/index.html");
+  // Debug için (üretimde kapatın)
+  mainWindow.webContents.openDevTools();
+  
+  mainWindow.loadFile("src/ui/index.html");
 }
 
+// IPC handler'larını yükle
+require("../handlers/ipcHandlers");
+
 app.whenReady().then(() => {
-    createWindow();
-    app.on("activate", () => {
-        if (BrowserWindow.getAllWindows().length === 0) createWindow();
-    });
+  createWindow();
+  
+  // MacOS için pencere yönetimi
+  app.on("activate", () => {
+    if (BrowserWindow.getAllWindows().length === 0) createWindow();
+  });
 });
 
+// Windows/Linux'ta tüm pencereler kapatıldığında çıkış
 app.on("window-all-closed", () => {
-    if (process.platform !== "darwin") app.quit();
+  if (process.platform !== "darwin") app.quit();
 });

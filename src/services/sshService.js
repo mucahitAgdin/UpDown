@@ -2,34 +2,52 @@
 const { NodeSSH } = require('node-ssh');
 
 /**
- * SSH ile komut çalıştırır (Windows/Linux/macOS uyumlu).
- * @param {string} ip - Hedef IP
- * @param {string} username - Kullanıcı adı
- * @param {string} password - Şifre (veya privateKey yolu)
- * @param {string} command - Çalıştırılacak komut
- * @param {string} osType - 'windows' | 'linux' | 'mac'
+ * SSH ile komut çalıştırma servisi
+ * @param {object} params - { ip, username, password, command, osType }
+ * @returns {Promise<{success: boolean, output?: string, error?: string}>}
  */
 async function executeSSHCommand({ ip, username, password, command, osType }) {
   const ssh = new NodeSSH();
   try {
+    console.log(`[SSH] ${username}@${ip} bağlantısı kuruluyor...`);
+
+    // Windows'ta daha uzun timeout gerekebilir
     await ssh.connect({
       host: ip,
       username,
-      password, // Veya privateKey: 'path/to/key'
+      password,
+      readyTimeout: 10000, // 10 saniye
+      onKeyboardInteractive: (name, instructions, prompts, finish) => {
+        if (prompts.length > 0) finish([password]); // Şifre istendiğinde otomatik yanıt
+      }
     });
 
-    // OS'e göre komut formatı
-    let formattedCommand = command;
+    // OS'e özel komut formatı
     if (osType === 'windows') {
-      formattedCommand = `powershell.exe -Command "${command.replace(/"/g, '\\"')}"`;
+      command = `powershell -Command "& {${command}}"`; // PowerShell wrapper
+      console.log("[SSH] Windows komut formatı:", command);
     }
 
-    const result = await ssh.execCommand(formattedCommand);
-    return { success: true, output: result.stdout || result.stderr };
+    const result = await ssh.execCommand(command);
+    
+    return {
+      success: !result.stderr,
+      output: result.stdout || result.stderr
+    };
   } catch (error) {
-    return { success: false, error: error.message };
+    console.error("[SSH] Bağlantı hatası:", {
+      message: error.message,
+      stack: error.stack
+    });
+    
+    return {
+      success: false,
+      error: error.message.includes('timed out') 
+        ? 'Bağlantı zaman aşımı. SSH servisi çalışıyor mu?'
+        : 'Kimlik doğrulama başarısız'
+    };
   } finally {
-    ssh.dispose();
+    ssh.dispose(); // Bağlantıyı kapat
   }
 }
 

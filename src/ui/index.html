@@ -1,19 +1,37 @@
-<!--src/ui/index.html:-->
-
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
+    <!-- TEMEL AYARLAR -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Wake On LAN</title>
+    
+    <!-- GÜVENLİK POLİTİKASI (CSP) -->
+    <meta http-equiv="Content-Security-Policy" content="
+        default-src 'self';
+        script-src 'self' 'unsafe-inline';
+        style-src 'self' 'unsafe-inline';
+        img-src 'self' data:;
+    ">
+    
+    <!-- DEBUG İÇİN ELEKTRON API KONTROLÜ -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('ElectronAPI Kontrol:', window.electronAPI ? "Mevcut" : "Eksik!");
+        });
+    </script>
+    
+    <!-- STIL DOSYASI -->
     <link rel="stylesheet" href="styles.css">
 </head>
 
 <body>
+    <!-- ANA KAPSAMI -->
     <div class="container">
-        <button id="toggleSidebar">☰</button>
+        <!-- SIDEBAR TOGGLE BUTONU -->
+        <button id="toggleSidebar" aria-label="Menüyü aç/kapat">☰</button>
 
+        <!-- SIDEBAR MENÜ -->
         <div id="sidebar" class="sidebar">
             <ul>
                 <li><a href="#" id="btn-home">Home</a></li>
@@ -23,39 +41,57 @@
             </ul>
         </div>
 
+        <!-- ANA İÇERİK -->
         <main class="content">
-            <!-- FIND DEVICE -->
+            <!-- BULUNAN CİHAZLAR BÖLÜMÜ -->
             <section id="find-device-section" class="hidden">
                 <h2>Find Device</h2>
-                <button id="search-device">Search Device</button>
+                <button id="search-device" class="action-button">Search Device</button>
                 <div id="scanned-device-list" class="device-list"></div>
             </section>
 
-            <!-- DEVICES -->
+            <!-- KAYITLI CİHAZLAR BÖLÜMÜ -->
             <section id="computers-section">
                 <h2>Devices</h2>
                 <div id="device-list" class="device-list"></div>
             </section>
         </main>
     </div>
+
+    <!-- TOAST MESAJ KONTEYNIRI -->
     <div id="toast-container"></div>
-    <script src="renderer.js"></script>
-
-
-    <div id="ssh-modal">
-        <h3>Cihazı Kapat</h3>
-        <input type="text" id="ssh-username" placeholder="SSH Kullanıcı Adı">
-        <input type="password" id="ssh-password" placeholder="SSH Şifresi">
-        <select id="ssh-os">
-            <option value="windows">Windows</option>
-            <option value="linux">Linux</option>
-            <option value="mac">Mac OS</option>
-        </select>
-        <div class="button-container">
-            <button onclick="confirmShutdown()">Onayla</button>
-            <button onclick="closeSshModal()">İptal</button>
+    
+    <!-- SSH MODAL PENCERESİ -->
+    <div id="ssh-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h3>Device Shutdown</h3>
+            
+            <div class="input-group">
+                <label for="ssh-username">Username:</label>
+                <input type="text" id="ssh-username" placeholder="Enter SSH username">
+            </div>
+            
+            <div class="input-group">
+                <label for="ssh-password">Password:</label>
+                <input type="password" id="ssh-password" placeholder="Enter SSH password">
+            </div>
+            
+            <div class="input-group">
+                <label for="ssh-os">OS Type:</label>
+                <select id="ssh-os">
+                    <option value="windows">Windows</option>
+                    <option value="linux">Linux</option>
+                </select>
+            </div>
+            
+            <div class="modal-actions">
+                <button id="confirm-shutdown" class="btn-confirm">Confirm</button>
+                <button onclick="closeSshModal()" class="btn-cancel">Cancel</button>
+            </div>
         </div>
     </div>
-</body>
 
+    <!-- UYGULAMA SCRİPTİ -->
+    <script src="renderer.js"></script>
+</body>
 </html>

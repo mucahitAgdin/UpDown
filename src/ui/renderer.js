@@ -1,24 +1,25 @@
-// src/ui/renderer.js:
+// src/ui/renderer.js
 
-const { ipcRenderer } = require("electron");
-
+/**
+ * UYGULAMA BAŞLANGICI
+ * DOM yüklendikten sonra tüm event listener'ları kuruyoruz
+ */
 document.addEventListener("DOMContentLoaded", () => {
+    // --- UI ELEMENT TANIMLARI ---
     const sidebar = document.querySelector(".sidebar");
     const toggleButton = document.getElementById("toggleSidebar");
     const content = document.querySelector(".content");
-
     const computersBtn = document.getElementById("btn-computers");
     const findDeviceBtn = document.getElementById("btn-find-device");
-
     const searchDeviceBtn = document.getElementById("search-device");
 
-    // Sidebar toggle
+    // --- SIDEBAR TOGGLE İŞLEMLERİ ---
     toggleButton.addEventListener("click", () => {
         sidebar.classList.toggle("show");
         content.style.marginLeft = sidebar.classList.contains("show") ? "250px" : "0";
     });
 
-    // Dışarı tıklanınca sidebar kapansın
+    // Dışarı tıklanınca sidebar'ı kapat
     document.addEventListener("click", (event) => {
         if (!sidebar.contains(event.target) && !toggleButton.contains(event.target)) {
             sidebar.classList.remove("show");
@@ -26,31 +27,40 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-    // Cihazlar sekmesi
+    // --- SEKMELER ARASI GEÇİŞ ---
     computersBtn.addEventListener("click", () => {
         document.getElementById("computers-section").style.display = "block";
         document.getElementById("find-device-section").style.display = "none";
         loadDevices();
     });
 
-    // Cihaz bul sekmesi
     findDeviceBtn.addEventListener("click", () => {
         document.getElementById("computers-section").style.display = "none";
         document.getElementById("find-device-section").style.display = "block";
     });
 
-    // Ağ tarama
+    // --- AĞ TARAMA BUTONU ---
     searchDeviceBtn.addEventListener("click", async () => {
-        const scannedDevices = await ipcRenderer.invoke("scan-network");
-        displayScannedDevices(scannedDevices);
+        try {
+            const scannedDevices = await window.electronAPI.ipcRenderer.invoke("scan-network");
+            displayScannedDevices(scannedDevices);
+        } catch (error) {
+            console.error("Ağ tarama hatası:", error);
+            showToast("Ağ tarama başarısız!", "error");
+        }
     });
 
-    // Sayfa yüklenince cihazları getir
+    // --- SSH MODAL BUTONU ---
+    document.getElementById("confirm-shutdown")?.addEventListener("click", confirmShutdown);
+
+    // Sayfa açılışında cihazları yükle
     loadDevices();
 });
 
 /**
- * Toast mesajı
+ * TOAST MESAJ GÖSTERİCİ
+ * @param {string} message - Gösterilecek mesaj
+ * @param {string} type - Mesaj tipi (success, error, warning, info)
  */
 function showToast(message, type = "info") {
     const toast = document.createElement("div");
@@ -72,7 +82,8 @@ function showToast(message, type = "info") {
 }
 
 /**
- * Taranan cihazları göster
+ * TARANAN CİHAZLARI LİSTELE
+ * @param {Array} devices - Taranan cihaz listesi
  */
 function displayScannedDevices(devices) {
     const scannedListDiv = document.getElementById("scanned-device-list");
@@ -101,131 +112,150 @@ function displayScannedDevices(devices) {
 }
 
 /**
- * Yeni cihaz ekle
+ * YENİ CİHAZ EKLEME
+ * @param {string} name - Cihaz adı
+ * @param {string} ip - IP adresi
+ * @param {string} mac - MAC adresi
  */
 async function addDevice(name, ip, mac) {
-    const existingDevices = await ipcRenderer.invoke("get-device-list");
-    const alreadyExists = existingDevices.some(d => d.mac === mac);
+    try {
+        const existingDevices = await window.electronAPI.ipcRenderer.invoke("get-device-list");
+        const alreadyExists = existingDevices.some(d => d.mac === mac);
 
-    if (alreadyExists) {
-        showToast("Bu cihaz zaten listede var!", "warning");
-        return;
+        if (alreadyExists) {
+            showToast("Bu cihaz zaten listede var!", "warning");
+            return;
+        }
+
+        const device = { id: Date.now(), name, ip, mac };
+        window.electronAPI.ipcRenderer.send("add-device", device);
+        showToast("Cihaz başarıyla eklendi!", "success");
+        loadDevices();
+    } catch (error) {
+        console.error("Cihaz ekleme hatası:", error);
+        showToast("Cihaz eklenemedi!", "error");
     }
-
-    const device = {
-        id: Date.now(),
-        name,
-        ip,
-        mac
-    };
-
-    ipcRenderer.send("add-device", device);
-    showToast("Cihaz başarıyla eklendi!", "success");
-    loadDevices();
 }
 
 /**
- * Cihazları yükle
+ * CİHAZ LİSTESİNİ YÜKLE
  */
 async function loadDevices() {
-    const devices = await ipcRenderer.invoke("get-device-list");
-    const deviceListDiv = document.getElementById("device-list");
-    deviceListDiv.innerHTML = "";
+    try {
+        const devices = await window.electronAPI.ipcRenderer.invoke("get-device-list");
+        const deviceListDiv = document.getElementById("device-list");
+        deviceListDiv.innerHTML = "";
 
-    devices.forEach(device => {
-        const deviceCard = document.createElement("div");
-        deviceCard.classList.add("device-card");
+        devices.forEach(device => {
+            const deviceCard = document.createElement("div");
+            deviceCard.classList.add("device-card");
 
-        const nameP = document.createElement("p");
-        nameP.innerHTML = `<strong>${device.name}</strong>`;
-        const ipP = document.createElement("p");
-        ipP.textContent = `IP: ${device.ip}`;
+            // Cihaz bilgileri
+            const nameP = document.createElement("p");
+            nameP.innerHTML = `<strong>${device.name}</strong>`;
+            const ipP = document.createElement("p");
+            ipP.textContent = `IP: ${device.ip}`;
 
-        const wakeBtn = document.createElement("button");
-        wakeBtn.textContent = "Wake";
-        wakeBtn.addEventListener("click", () => wakeDevice(device.mac));
+            // Wake butonu
+            const wakeBtn = document.createElement("button");
+            wakeBtn.textContent = "Wake";
+            wakeBtn.addEventListener("click", () => wakeDevice(device.mac));
 
-        const shutdownBtn = document.createElement("button");
-        shutdownBtn.textContent = "Shutdown";
-        shutdownBtn.addEventListener("click", () => openSshModal(device.ip));
+            // Shutdown butonu
+            const shutdownBtn = document.createElement("button");
+            shutdownBtn.textContent = "Shutdown";
+            shutdownBtn.addEventListener("click", () => openSshModal(device.ip));
 
-        const removeBtn = document.createElement("button");
-        removeBtn.textContent = "Remove";
-        removeBtn.addEventListener("click", () => removeDevice(device.mac));
+            // Remove butonu
+            const removeBtn = document.createElement("button");
+            removeBtn.textContent = "Remove";
+            removeBtn.addEventListener("click", () => removeDevice(device.mac));
 
-        deviceCard.append(nameP, ipP, wakeBtn, shutdownBtn, removeBtn);
-        deviceListDiv.appendChild(deviceCard);
-    });
+            deviceCard.append(nameP, ipP, wakeBtn, shutdownBtn, removeBtn);
+            deviceListDiv.appendChild(deviceCard);
+        });
+    } catch (error) {
+        console.error("Cihaz listesi yüklenemedi:", error);
+    }
 }
 
 /**
- * Cihaz sil
+ * CİHAZ SİLME
+ * @param {string} mac - Silinecek cihazın MAC adresi
  */
 function removeDevice(mac) {
-    ipcRenderer.send("remove-device", mac);
+    window.electronAPI.ipcRenderer.send("remove-device", mac);
     showToast("Cihaz silindi", "info");
     loadDevices();
 }
 
 /**
- * Wake-on-LAN gönder
+ * WAKE-ON-LAN İŞLEMİ
+ * @param {string} mac - Uyandırılacak cihazın MAC adresi
  */
 async function wakeDevice(mac) {
     try {
-        const result = await ipcRenderer.invoke("wake-device", mac);
-        showToast(result.success ? "Cihaz uyandırıldı!" : "Uyandırma başarısız!", result.success ? "success" : "error");
+        const result = await window.electronAPI.ipcRenderer.invoke("wake-device", mac);
+        showToast(result.success ? "Cihaz uyandırıldı!" : "Uyandırma başarısız!", 
+                 result.success ? "success" : "error");
     } catch (error) {
         console.error("Wake error:", error);
-        showToast("Bir hata oluştu!", "error");
+        showToast("Uyandırma hatası!", "error");
     }
 }
 
-async function sendSSH(ip) {
-    const username = prompt("Windows kullanıcı adı:");
-    const password = prompt("Parola:");
-    const command = prompt("Komut girin (örnek: dir, shutdown /s /t 0):");
-
-    if (!username || !password || !command) return;
-
-    const result = await ipcRenderer.invoke("send-ssh-command", {
-        ip, username, password, command
-    });
-
-    alert("Komut sonucu:\n" + result);
-}
-
-// src/ui/renderer.js'e ekle:
+/**
+ * SSH MODAL AÇMA
+ * @param {string} ip - Hedef cihaz IP adresi
+ */
 function openSshModal(ip) {
-    const modal = document.getElementById('ssh-modal');
-    modal.style.display = 'block';
-    modal.dataset.ip = ip; // IP'yi modal'a sakla
-  }
-  
-  function closeSshModal() {
-    document.getElementById('ssh-modal').style.display = 'none';
-  }
-  
-  async function confirmShutdown() {
-    const modal = document.getElementById('ssh-modal');
-    const ip = modal.dataset.ip;
-    const username = document.getElementById('ssh-username').value;
-    const password = document.getElementById('ssh-password').value;
-    const osType = document.getElementById('ssh-os').value;
-  
-    if (!username || !password) {
-      showToast('Kullanıcı adı/şifre boş olamaz!', 'error');
-      return;
+    const modal = document.getElementById("ssh-modal");
+    modal.dataset.ip = ip;
+    modal.style.display = "block";
+    
+    // Modal açılınca inputları temizle
+    document.getElementById("ssh-username").value = "";
+    document.getElementById("ssh-password").value = "";
+}
+
+/**
+ * SSH MODAL KAPATMA
+ */
+function closeSshModal() {
+    document.getElementById("ssh-modal").style.display = "none";
+}
+
+/**
+ * SSH İLE KAPATMA ONAYI
+ */
+async function confirmShutdown() {
+    const modal = document.getElementById("ssh-modal");
+    try {
+        const config = {
+            ip: modal.dataset.ip,
+            username: document.getElementById("ssh-username").value,
+            password: document.getElementById("ssh-password").value,
+            osType: document.getElementById("ssh-os").value,
+            command: document.getElementById("ssh-os").value === "windows" 
+                ? "shutdown /s /t 5" 
+                : "sudo shutdown now"
+        };
+
+        if (!config.username || !config.password) {
+            throw new Error("Kullanıcı adı ve şifre gereklidir");
+        }
+
+        const result = await window.electronAPI.sendSSHCommand(config);
+        
+        if (result.success) {
+            showToast("Komut başarıyla gönderildi", "success");
+        } else {
+            throw new Error(result.error || "Bilinmeyen SSH hatası");
+        }
+    } catch (error) {
+        console.error("SSH Hatası:", error);
+        showToast(`Hata: ${error.message}`, "error");
+    } finally {
+        modal.style.display = "none";
     }
-  
-    const command = osType === 'windows' ? 'shutdown /s /t 0' : 'sudo poweroff';
-    const result = await window.electronAPI.sendSSHCommand({ 
-      ip, username, password, command, osType 
-    });
-  
-    if (result.success) {
-      showToast(`Komut başarıyla gönderildi: ${result.output}`, 'success');
-    } else {
-      showToast(`SSH Hatası: ${result.error}`, 'error');
-    }
-    closeSshModal();
-  }
+}
