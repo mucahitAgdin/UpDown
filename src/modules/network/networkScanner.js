@@ -1,3 +1,5 @@
+//src/modules/network/networkScanner.js:
+
 const { exec } = require("child_process");
 
 function scanNetwork() {

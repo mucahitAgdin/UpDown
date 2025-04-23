@@ -1,9 +1,11 @@
+//src/handlers/ipcHandlers.js:
+
 const { ipcMain } = require("electron");
 const { exec } = require('child_process');
 const deviceManager = require("../modules/device/deviceManager");
 const { scanNetwork } = require("../modules/network/networkScanner");
 const { wakeDevice } = require("../services/wolService");
-const sshService = require("../services/sshService"); // Yeni eklenen SSH servisi
+const { executeSSHCommand } = require("../services/sshService");
 
 // Ağ tarama IPC handler'ı
 ipcMain.handle("scan-network", async () => {
@@ -33,22 +35,8 @@ ipcMain.handle("wake-device", async (event, macAddress) => {
     return await wakeDevice(macAddress);
 });
 
-ipcMain.on('shutdown-device', (event, data) => {
-    const { username, password, os, ip } = data;
 
-    let command = '';
-    if (os === 'windows') {
-        command = `sshpass -p ${password} ssh ${username}@${ip} "shutdown /s /t 0"`;
-    } else {
-        command = `sshpass -p ${password} ssh ${username}@${ip} "shutdown now"`;
-    }
-
-    exec(command, (error, stdout, stderr) => {
-        if (error) {
-            console.error(`Hata: ${error.message}`);
-            return;
-        }
-        console.log(`stdout: ${stdout}`);
-        console.error(`stderr: ${stderr}`);
-    });
+// SSH Komutu Handler'ı
+ipcMain.handle("send-ssh-command", async (_, { ip, username, password, command, osType }) => {
+  return await executeSSHCommand({ ip, username, password, command, osType });
 });

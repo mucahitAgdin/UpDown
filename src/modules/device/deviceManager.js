@@ -1,4 +1,4 @@
-// src/modules/deviceManager.js
+// src/modules/device/deviceManager.js
 const db = require("../database/database");
 
 // yeni cihaz ekle

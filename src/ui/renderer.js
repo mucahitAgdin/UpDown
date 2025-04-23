@@ -1,3 +1,5 @@
+// src/ui/renderer.js:
+
 const { ipcRenderer } = require("electron");
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -178,40 +180,52 @@ async function wakeDevice(mac) {
     }
 }
 
-// SSH modal işlemleri
-let selectedDeviceIp = "";
+async function sendSSH(ip) {
+    const username = prompt("Windows kullanıcı adı:");
+    const password = prompt("Parola:");
+    const command = prompt("Komut girin (örnek: dir, shutdown /s /t 0):");
 
+    if (!username || !password || !command) return;
+
+    const result = await ipcRenderer.invoke("send-ssh-command", {
+        ip, username, password, command
+    });
+
+    alert("Komut sonucu:\n" + result);
+}
+
+// src/ui/renderer.js'e ekle:
 function openSshModal(ip) {
-    selectedDeviceIp = ip;
-    document.getElementById("ssh-modal").style.display = "block";
-}
-
-function closeSshModal() {
-    document.getElementById("ssh-modal").style.display = "none";
-}
-
-function confirmShutdown() {
+    const modal = document.getElementById('ssh-modal');
+    modal.style.display = 'block';
+    modal.dataset.ip = ip; // IP'yi modal'a sakla
+  }
+  
+  function closeSshModal() {
+    document.getElementById('ssh-modal').style.display = 'none';
+  }
+  
+  async function confirmShutdown() {
+    const modal = document.getElementById('ssh-modal');
+    const ip = modal.dataset.ip;
     const username = document.getElementById('ssh-username').value;
     const password = document.getElementById('ssh-password').value;
     const osType = document.getElementById('ssh-os').value;
-
-    if (!selectedDeviceIp || !username || !password || !osType) {
-        alert("Lütfen tüm alanları doldurun!");
-        return;
+  
+    if (!username || !password) {
+      showToast('Kullanıcı adı/şifre boş olamaz!', 'error');
+      return;
     }
-
-    window.electronAPI.shutdownDevice({
-        ip: selectedDeviceIp,
-        username,
-        password,
-        osType
-    }).then(result => {
-        alert(result);
+  
+    const command = osType === 'windows' ? 'shutdown /s /t 0' : 'sudo poweroff';
+    const result = await window.electronAPI.sendSSHCommand({ 
+      ip, username, password, command, osType 
     });
-
+  
+    if (result.success) {
+      showToast(`Komut başarıyla gönderildi: ${result.output}`, 'success');
+    } else {
+      showToast(`SSH Hatası: ${result.error}`, 'error');
+    }
     closeSshModal();
-}
-
-// Dışarıdan erişim gerekirse
-window.confirmShutdown = confirmShutdown;
-window.closeSshModal = closeSshModal;
+  }

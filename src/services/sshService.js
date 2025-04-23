@@ -1,45 +1,36 @@
-// sshService.js
-
+// src/services/sshService.js
 const { NodeSSH } = require('node-ssh');
-const ssh = new NodeSSH();
 
 /**
- * SSH ile cihaza bağlanıp kapatma komutu gönderir
- * @param {string} ip - Cihazın IP adresi
- * @param {string} username - SSH kullanıcı adı
- * @param {string} password - SSH şifresi
- * @param {string} osType - windows | linux | mac
- * @returns {Promise<string>}
+ * SSH ile komut çalıştırır (Windows/Linux/macOS uyumlu).
+ * @param {string} ip - Hedef IP
+ * @param {string} username - Kullanıcı adı
+ * @param {string} password - Şifre (veya privateKey yolu)
+ * @param {string} command - Çalıştırılacak komut
+ * @param {string} osType - 'windows' | 'linux' | 'mac'
  */
-async function shutdown(ip, username, password, osType) {
-    try {
-        await ssh.connect({
-            host: ip,
-            username,
-            password
-        });
+async function executeSSHCommand({ ip, username, password, command, osType }) {
+  const ssh = new NodeSSH();
+  try {
+    await ssh.connect({
+      host: ip,
+      username,
+      password, // Veya privateKey: 'path/to/key'
+    });
 
-        let command = '';
-        switch (osType.toLowerCase()) {
-            case 'windows':
-                command = 'shutdown /s /t 0';
-                break;
-            case 'linux':
-                command = 'shutdown now';
-                break;
-            case 'mac':
-                command = 'sudo shutdown -h now';
-                break;
-            default:
-                throw new Error('Bilinmeyen işletim sistemi türü.');
-        }
-
-        const result = await ssh.execCommand(command);
-        ssh.dispose();
-        return result.stderr || result.stdout || 'Komut gönderildi.';
-    } catch (err) {
-        return `Hata: ${err.message}`;
+    // OS'e göre komut formatı
+    let formattedCommand = command;
+    if (osType === 'windows') {
+      formattedCommand = `powershell.exe -Command "${command.replace(/"/g, '\\"')}"`;
     }
+
+    const result = await ssh.execCommand(formattedCommand);
+    return { success: true, output: result.stdout || result.stderr };
+  } catch (error) {
+    return { success: false, error: error.message };
+  } finally {
+    ssh.dispose();
+  }
 }
 
-module.exports = { shutdown };
+module.exports = { executeSSHCommand };
