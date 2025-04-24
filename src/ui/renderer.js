@@ -42,7 +42,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // --- AĞ TARAMA BUTONU ---
     searchDeviceBtn.addEventListener("click", async () => {
         try {
-            const scannedDevices = await window.electronAPI.ipcRenderer.invoke("scan-network");
+            const scannedDevices = await window.electronAPI.scanNetwork();
             displayScannedDevices(scannedDevices);
         } catch (error) {
             console.error("Ağ tarama hatası:", error);
@@ -119,25 +119,25 @@ function displayScannedDevices(devices) {
  */
 async function addDevice(name, ip, mac) {
     try {
-      const result = await window.electronAPI.addDevice({ name, ip, mac });
-      if (result.success) {
-        showToast("Cihaz eklendi", "success");
-        await loadDevices();
-      } else {
-        showToast(result.message || "Cihaz eklenemedi", "warning");
-      }
+        const result = await window.electronAPI.addDevice({ name, ip, mac });
+        if (result.success) {
+            showToast("Cihaz eklendi", "success");
+            await loadDevices();
+        } else {
+            showToast(result.message || "Cihaz eklenemedi", "warning");
+        }
     } catch (error) {
-      console.error("Ekleme hatası:", error);
-      showToast("Cihaz eklenemedi!", "error");
+        console.error("Ekleme hatası:", error);
+        showToast("Cihaz eklenemedi!", "error");
     }
-  }
+}
 
 /**
  * CİHAZ LİSTESİNİ YÜKLE
  */
 async function loadDevices() {
     try {
-        const devices = await window.electronAPI.ipcRenderer.invoke("get-device-list");
+        const devices = await window.electronAPI.listDevices();
         const deviceListDiv = document.getElementById("device-list");
         deviceListDiv.innerHTML = "";
 
@@ -180,16 +180,16 @@ async function loadDevices() {
  */
 async function removeDevice(mac) {
     try {
-      const { success } = await window.electronAPI.removeDevice(mac);
-      if (success) {
-        showToast("Cihaz silindi", "info");
-        await loadDevices();
-      }
+        const { success } = await window.electronAPI.removeDevice(mac);
+        if (success) {
+            showToast("Cihaz silindi", "info");
+            await loadDevices();
+        }
     } catch (error) {
-      console.error("Silme hatası:", error);
-      showToast("Silme işlemi başarısız!", "error");
+        console.error("Silme hatası:", error);
+        showToast("Silme işlemi başarısız!", "error");
     }
-  }
+}
 
 /**
  * WAKE-ON-LAN İŞLEMİ
@@ -197,9 +197,9 @@ async function removeDevice(mac) {
  */
 async function wakeDevice(mac) {
     try {
-        const result = await window.electronAPI.ipcRenderer.invoke("wake-device", mac);
-        showToast(result.success ? "Cihaz uyandırıldı!" : "Uyandırma başarısız!", 
-                 result.success ? "success" : "error");
+        const result = await window.electronAPI.wakeDevice(mac);
+        showToast(result.success ? "Cihaz uyandırıldı!" : "Uyandırma başarısız!",
+            result.success ? "success" : "error");
     } catch (error) {
         console.error("Wake error:", error);
         showToast("Uyandırma hatası!", "error");
@@ -214,7 +214,7 @@ function openSshModal(ip) {
     const modal = document.getElementById("ssh-modal");
     modal.dataset.ip = ip;
     modal.style.display = "block";
-    
+
     // Modal açılınca inputları temizle
     document.getElementById("ssh-username").value = "";
     document.getElementById("ssh-password").value = "";
@@ -238,8 +238,8 @@ async function confirmShutdown() {
             username: document.getElementById("ssh-username").value,
             password: document.getElementById("ssh-password").value,
             osType: document.getElementById("ssh-os").value,
-            command: document.getElementById("ssh-os").value === "windows" 
-                ? "shutdown /s /t 5" 
+            command: document.getElementById("ssh-os").value === "windows"
+                ? "shutdown /s /t 5"
                 : "sudo shutdown now"
         };
 
@@ -248,7 +248,7 @@ async function confirmShutdown() {
         }
 
         const result = await window.electronAPI.sendSSHCommand(config);
-        
+
         if (result.success) {
             showToast("Komut başarıyla gönderildi", "success");
         } else {

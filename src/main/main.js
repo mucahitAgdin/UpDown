@@ -1,6 +1,8 @@
+//src/main/main.js
+
 const { app, BrowserWindow } = require("electron");
 const path = require("path");
-const setupIPCHandlers = require("./handlers/ipcHandlers");
+const setupIPCHandlers = require("../handlers/ipcHandlers");
 
 function createWindow() {
   const mainWindow = new BrowserWindow({
@@ -10,17 +12,18 @@ function createWindow() {
       preload: path.join(__dirname, "preload.js"),
       contextIsolation: true,
       nodeIntegration: false,
-      sandbox: true
+      sandbox: true,
+      enableRemoteModule: false,
     }
   });
 
   // IPC Handler'ları kur
   setupIPCHandlers();
 
-  // DevTools'u aç (üretimde kapatın)
-  if (!app.isPackaged) {
+  // DevTools'u aç
+  /*if (!app.isPackaged) {
     mainWindow.webContents.openDevTools();
-  }
+  }*/
 
   mainWindow.loadFile("src/ui/index.html");
 }

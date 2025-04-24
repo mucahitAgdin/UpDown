@@ -1,6 +1,7 @@
+//src/main/preload.js
+
 const { contextBridge, ipcRenderer } = require('electron');
 
-// Güvenli API erişimi
 contextBridge.exposeInMainWorld('electronAPI', {
   // Cihaz işlemleri
   listDevices: () => ipcRenderer.invoke("get-device-list"),

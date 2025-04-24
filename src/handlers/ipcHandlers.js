@@ -1,3 +1,5 @@
+//src/handlers/ipcHandlers.js
+
 const { ipcMain } = require("electron");
 const deviceManager = require("../modules/device/deviceManager");
 const { scanNetwork } = require("../modules/network/networkScanner");
