@@ -5,7 +5,6 @@ const deviceManager = require("../modules/device/deviceManager");
 const { scanNetwork } = require("../modules/network/networkScanner");
 const { getMacAddress } = require("../modules/network/macFinder");
 const { wakeDevice } = require("../services/wolService");
-const { executeSSHCommand } = require("../services/sshService");
 
 // Tüm handler'ları tek bir yerde topluyoruz
 module.exports = function setupIPCHandlers() {
@@ -64,21 +63,6 @@ module.exports = function setupIPCHandlers() {
     } catch (error) {
       console.error("Wake hatası:", error);
       return { success: false, error: error.message };
-    }
-  });
-
-  // SSH operasyonları
-  ipcMain.handle("send-ssh-command", async (_, config) => {
-    try {
-      return await executeSSHCommand(config);
-    } catch (error) {
-      console.error("SSH hatası:", error);
-      return { 
-        success: false, 
-        error: error.message.includes("timed out") 
-          ? "Bağlantı zaman aşımı" 
-          : error.message 
-      };
     }
   });
 };

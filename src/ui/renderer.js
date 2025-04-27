@@ -50,9 +50,6 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-    // --- SSH MODAL BUTONU ---
-    document.getElementById("confirm-shutdown")?.addEventListener("click", confirmShutdown);
-
     // Sayfa açılışında cihazları yükle
     loadDevices();
 });
@@ -156,11 +153,6 @@ async function loadDevices() {
             wakeBtn.textContent = "Wake";
             wakeBtn.addEventListener("click", () => wakeDevice(device.mac));
 
-            // Shutdown butonu
-            const shutdownBtn = document.createElement("button");
-            shutdownBtn.textContent = "Shutdown";
-            shutdownBtn.addEventListener("click", () => openSshModal(device.ip));
-
             // Remove butonu
             const removeBtn = document.createElement("button");
             removeBtn.textContent = "Remove";
@@ -206,58 +198,5 @@ async function wakeDevice(mac) {
     }
 }
 
-/**
- * SSH MODAL AÇMA
- * @param {string} ip - Hedef cihaz IP adresi
- */
-function openSshModal(ip) {
-    const modal = document.getElementById("ssh-modal");
-    modal.dataset.ip = ip;
-    modal.style.display = "block";
 
-    // Modal açılınca inputları temizle
-    document.getElementById("ssh-username").value = "";
-    document.getElementById("ssh-password").value = "";
-}
 
-/**
- * SSH MODAL KAPATMA
- */
-function closeSshModal() {
-    document.getElementById("ssh-modal").style.display = "none";
-}
-
-/**
- * SSH İLE KAPATMA ONAYI
- */
-async function confirmShutdown() {
-    const modal = document.getElementById("ssh-modal");
-    try {
-        const config = {
-            ip: modal.dataset.ip,
-            username: document.getElementById("ssh-username").value,
-            password: document.getElementById("ssh-password").value,
-            osType: document.getElementById("ssh-os").value,
-            command: document.getElementById("ssh-os").value === "windows"
-                ? "shutdown /s /t 5"
-                : "sudo shutdown now"
-        };
-
-        if (!config.username || !config.password) {
-            throw new Error("Kullanıcı adı ve şifre gereklidir");
-        }
-
-        const result = await window.electronAPI.sendSSHCommand(config);
-
-        if (result.success) {
-            showToast("Komut başarıyla gönderildi", "success");
-        } else {
-            throw new Error(result.error || "Bilinmeyen SSH hatası");
-        }
-    } catch (error) {
-        console.error("SSH Hatası:", error);
-        showToast(`Hata: ${error.message}`, "error");
-    } finally {
-        modal.style.display = "none";
-    }
-}

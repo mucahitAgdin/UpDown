@@ -62,36 +62,6 @@
     <!-- TOAST MESAJ KONTEYNIRI -->
     <div id="toast-container"></div>
 
-    <!-- SSH MODAL PENCERESİ -->
-    <div id="ssh-modal" class="modal-overlay">
-        <div class="modal-content">
-            <h3>Device Shutdown</h3>
-
-            <div class="input-group">
-                <label for="ssh-username">Username:</label>
-                <input type="text" id="ssh-username" placeholder="Enter SSH username">
-            </div>
-
-            <div class="input-group">
-                <label for="ssh-password">Password:</label>
-                <input type="password" id="ssh-password" placeholder="Enter SSH password">
-            </div>
-
-            <div class="input-group">
-                <label for="ssh-os">OS Type:</label>
-                <select id="ssh-os">
-                    <option value="windows">Windows</option>
-                    <option value="linux">Linux</option>
-                </select>
-            </div>
-
-            <div class="modal-actions">
-                <button id="confirm-shutdown" class="btn-confirm">Confirm</button>
-                <button onclick="closeSshModal()" class="btn-cancel">Cancel</button>
-            </div>
-        </div>
-    </div>
-
     <!-- UYGULAMA SCRİPTİ -->
     <script src="renderer.js"></script>
 </body>
