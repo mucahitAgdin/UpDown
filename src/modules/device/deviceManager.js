@@ -10,10 +10,17 @@ async function addDevice(device) {
       [name, ip, mac],
       function (err) {
         if (err) return reject(err);
-        resolve({
-          success: this.changes > 0,
-          message: this.changes > 0 
-            ? "Cihaz eklendi" 
+        const success = this.changes > 0;
+
+        // Cihaz logunu burada yazdırıyoruz
+        console.log(success
+          ? ` Eklendi → Name: ${name}, IP: ${ip}, MAC: ${mac}`
+          : ` Zaten ekli → Name: ${name}, IP: ${ip}, MAC: ${mac}`);
+        
+          resolve({
+          success,
+          message: success
+            ? "Cihaz eklendi"
             : "Cihaz zaten mevcut"
         });
       }

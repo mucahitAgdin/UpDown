@@ -13,5 +13,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getMacAddress: (ip) => ipcRenderer.invoke("get-mac-address", ip),
   
   // Uzak kontrol
-  wakeDevice: (mac) => ipcRenderer.invoke("wake-device", mac)
+  wakeDevice: (mac) => ipcRenderer.invoke("wake-device", mac),
+
+  shutdownDevice: (ip) => ipcRenderer.invoke('shutdown-device', ip)
 });

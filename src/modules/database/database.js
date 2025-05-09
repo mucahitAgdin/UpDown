@@ -15,8 +15,7 @@ db.serialize(() => {
             name TEXT,
             ip TEXT,
             mac TEXT UNIQUE
-       ) 
-        `);
+       )`);
 });
 
 module.exports = db;

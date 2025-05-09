@@ -187,3 +187,13 @@ body {
     transform: translateX(100%);
   }
 }
+
+.shutdown-btn {
+  background-color: #f44336 !important;
+  /* Kırmızı */
+  margin-left: 8px;
+}
+
+.shutdown-btn:hover {
+  background-color: #d32f2f !important;
+}

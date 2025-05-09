@@ -158,7 +158,13 @@ async function loadDevices() {
             removeBtn.textContent = "Remove";
             removeBtn.addEventListener("click", () => removeDevice(device.mac));
 
-            deviceCard.append(nameP, ipP, wakeBtn, shutdownBtn, removeBtn);
+            // YENİ: Shutdown butonu
+            const shutdownBtn = document.createElement("button");
+            shutdownBtn.textContent = "Shutdown";
+            shutdownBtn.classList.add("shutdown-btn");
+            shutdownBtn.addEventListener("click", () => shutdownDevice(device.ip));
+
+            deviceCard.append(nameP, ipP, wakeBtn, removeBtn, shutdownBtn);
             deviceListDiv.appendChild(deviceCard);
         });
     } catch (error) {
@@ -198,5 +204,18 @@ async function wakeDevice(mac) {
     }
 }
 
-
+// Shutdown fonksiyonu
+async function shutdownDevice(ip) {
+    const confirmShutdown = confirm("Bu cihazı kapatmak istediğinize emin misiniz?");
+    if (!confirmShutdown) return;
+  
+    try {
+      const result = await window.electronAPI.shutdownDevice(ip);
+      showToast(result.message, result.success ? "success" : "error");
+    } catch (error) {
+      console.error("Shutdown error:", error);
+      showToast("Kapatma işlemi başarısız!", "error");
+    }
+  }
+  
 

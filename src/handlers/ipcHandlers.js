@@ -5,6 +5,7 @@ const deviceManager = require("../modules/device/deviceManager");
 const { scanNetwork } = require("../modules/network/networkScanner");
 const { getMacAddress } = require("../modules/network/macFinder");
 const { wakeDevice } = require("../services/wolService");
+const { shutdownWindowsDevice } = require("../services/shutdownService");
 
 // Tüm handler'ları tek bir yerde topluyoruz
 module.exports = function setupIPCHandlers() {
@@ -65,4 +66,16 @@ module.exports = function setupIPCHandlers() {
       return { success: false, error: error.message };
     }
   });
+
+  ipcMain.handle("shutdown-device", async (_, ip = "") => {
+    try {
+      const result = await shutdownWindowsDevice(ip);
+      return { success: true, message: result.message };
+    } catch (error) {
+      console.error("Shutdown error:", error);
+      return { success: false, message: error.message || "Kapatma hatası!" };
+    }
+  });
+  
 };
+
