@@ -41,14 +41,22 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // --- AĞ TARAMA BUTONU ---
     searchDeviceBtn.addEventListener("click", async () => {
-        try {
-            const scannedDevices = await window.electronAPI.scanNetwork();
-            displayScannedDevices(scannedDevices);
-        } catch (error) {
-            console.error("Ağ tarama hatası:", error);
-            showToast("Ağ tarama başarısız!", "error");
-        }
-    });
+    const scanStatus = document.getElementById("scan-status");
+    
+    try {
+        scanStatus.classList.remove("hidden");  // göster
+        const scannedDevices = await window.electronAPI.scanNetwork();
+        displayScannedDevices(scannedDevices);
+        showToast(`${scannedDevices.length} cihaz bulundu`, "success");
+
+    } catch (error) {
+        console.error("Ağ tarama hatası:", error);
+        showToast("Ağ tarama başarısız!", "error");
+
+    } finally {
+        scanStatus.classList.add("hidden"); // gizle
+    }
+});
 
     // Sayfa açılışında cihazları yükle
     loadDevices();

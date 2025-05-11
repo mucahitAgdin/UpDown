@@ -3,29 +3,19 @@
 const { ipcMain } = require("electron");
 const deviceManager = require("../modules/device/deviceManager");
 const { scanNetwork } = require("../modules/network/networkScanner");
-const { getMacAddress } = require("../modules/network/macFinder");
 const { wakeDevice } = require("../services/wolService");
 const { shutdownWindowsDevice } = require("../services/shutdownService");
 
 // Tüm handler'ları tek bir yerde topluyoruz
 module.exports = function setupIPCHandlers() {
-  // Ağ tarama (ARP tablosu)
+  
   ipcMain.handle("scan-network", async () => {
     try {
-      return await scanNetwork();
+      const devices = await scanNetwork();
+      return devices; // taranan ve veritabanına eklenen cihazları döndür
     } catch (error) {
       console.error("Ağ tarama hatası:", error);
       return [];
-    }
-  });
-
-  // MAC adresi çözümleme
-  ipcMain.handle("get-mac-address", async (_, ip) => {
-    try {
-      return await getMacAddress(ip);
-    } catch (error) {
-      console.error("MAC bulma hatası:", error);
-      return null;
     }
   });
 
@@ -76,6 +66,6 @@ module.exports = function setupIPCHandlers() {
       return { success: false, message: error.message || "Kapatma hatası!" };
     }
   });
-  
+
 };
 

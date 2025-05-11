@@ -1,30 +1,52 @@
-//src/modules/network/networkScanner.js:
+// src/modules/network/networkScanner.js
 
-const { exec } = require("child_process");
+const os = require("os");
+const ip = require("ip");
+const nmap = require("node-nmap");
+const { addDevice } = require("../device/deviceManager");
+
+// Nmap yolunu Windows için belirt (gerekirse burayı düzenle)
+nmap.nmapLocation = "C:\\Program Files (x86)\\Nmap\\nmap.exe";
+
+function getLocalCIDR() {
+    const interfaces = os.networkInterfaces();
+    for (const name of Object.keys(interfaces)) {
+        for (const iface of interfaces[name]) {
+            if (iface.family === "IPv4" && !iface.internal) {
+                const subnet = ip.subnet(iface.address, iface.netmask);
+                return `${subnet.networkAddress}/${subnet.subnetMaskLength}`;
+            }
+        }
+    }
+    return null;
+}
 
 function scanNetwork() {
     return new Promise((resolve, reject) => {
-        exec("arp -a", (error, stdout) => {
-            if (error) {
-                return reject(error);
+        const cidr = getLocalCIDR();
+        if (!cidr) return reject(new Error("Ağ aralığı bulunamadı."));
+
+        const scan = new nmap.NmapScan(cidr, "-sn");
+
+        scan.on("complete", async (hosts) => {
+            const results = [];
+
+            for (const host of hosts) {
+                const ip = host.ip;
+                const mac = host.mac || "00:00:00:00:00:00";
+                const name = host.hostname || "Unknown";
+
+                results.push({ name, ip, mac });
             }
 
-            const lines = stdout.split("\n");
-            const devices = [];
-
-            for (const line of lines) {
-                const match = line.match(/(\d+\.\d+\.\d+\.\d+).*?(([0-9A-Fa-f]{2}[:-]){5}[0-9A-Fa-f]{2})/i);
-                if (match) {
-                    devices.push({
-                        ip: match[1],
-                        mac: match[2],
-                        name: "Unknown"
-                    });
-                }
-            }
-
-            resolve(devices);
+            resolve(results);
         });
+
+        scan.on("error", (err) => {
+            reject(err);
+        });
+
+        scan.startScan();
     });
 }
 

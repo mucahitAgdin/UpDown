@@ -1,21 +1,17 @@
 // src/services/shutdownService.js
 const { exec } = require("child_process");
-const chalk = require("chalk");
 
 function logShutdown(ip, status, error = null) {
   const timestamp = new Date().toISOString();
-  const statusColor = status === "success" ? chalk.green : chalk.red;
+  const statusColor = status === "success" ? status : "FAIL";
 
-  console.log(`[${timestamp}] Shutdown Attempt:`,
-    chalk.blue(`IP: ${ip}`),
-    "Status:",
-    statusColor(status.toUpperCase())
-  );
+  console.log(`[${timestamp}] Shutdown Attempt: IP: ${ip}, Status: ${statusColor.toUpperCase()}`);
 
   if (error) {
-    console.error(chalk.yellow("Error Details:"), error);
+    console.error("Error Details:", error);
   }
 }
+
 
 async function shutdownWindowsDevice(ip) {
   const command = `shutdown /s /m \\\\${ip} /t 5 /f /c "Uzaktan kapatma"`; // 5 saniye içinde force shutdown
