@@ -1,5 +1,6 @@
 // src/services/shutdownService.js
 const dgram = require('dgram');
+require('dotenv').config();
 
 function logShutdown(ip, status, error = null) {
   const timestamp = new Date().toISOString();
@@ -15,37 +16,26 @@ function logShutdown(ip, status, error = null) {
 async function shutdownWindowsDevice(ip) {
   return new Promise((resolve, reject) => {
     const client = dgram.createSocket('udp4');
-    const message = Buffer.from('SHUTDOWN');
+    const secretKey = process.env.SECRET_KEY || 'DEFAULTKEY';
+    const message = Buffer.from(secretKey);
     const port = 9999;
-    const timeout = 3000; // 3 saniye timeout
+    const timeout = 3000;
 
-    // Timeout kontrolü
     const timer = setTimeout(() => {
       client.close();
-      logShutdown(ip, "failed", "Timeout: No response from listener");
       reject(new Error("Timeout: Listener didn't respond"));
     }, timeout);
 
-    client.on('error', (err) => {
+    client.send(message, 0, message.length, port, ip, (err) => {
       clearTimeout(timer);
       client.close();
-      logShutdown(ip, "failed", err.message);
-      reject(err);
-    });
 
-    client.send(message, 0, message.length, port, ip, (err) => {
       if (err) {
-        clearTimeout(timer);
-        client.close();
-        logShutdown(ip, "failed", err.message);
         reject(err);
       } else {
-        logShutdown(ip, "success");
-        clearTimeout(timer);
-        client.close();
-        resolve({ 
-          success: true, 
-          message: `Shutdown command sent to ${ip}:${port}` 
+        resolve({
+          success: true,
+          message: `Shutdown command sent to ${ip}:${port}`
         });
       }
     });

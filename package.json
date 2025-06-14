@@ -13,6 +13,7 @@
     "electron": "^35.2.0"
   },
   "dependencies": {
+    "dotenv": "^16.5.0",
     "ip": "^2.0.1",
     "node-nmap": "^4.0.0",
     "node-ssh": "^13.2.1",
