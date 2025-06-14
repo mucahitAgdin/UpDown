@@ -2,24 +2,30 @@
 
 const wol = require("wake_on_lan");
 
-/**
- * Belirtilen MAC adresine Wake-on-LAN sinyali gönderir.
- * @param {string} macAddress - Uyandırılacak cihazın MAC adresi.
- * @returns {Promise<{ success: boolean, error?: string }>}
- */
-function wakeDevice(macAddress) {
-    return new Promise((resolve) => {
-        wol.wake(macAddress, function (error) {
-            if (error) {
-                console.error("Wake error:", error);
-                resolve({ success: false, error: error.message });
-            } else {
-                console.log("Wake signal sent to:", macAddress);
-                resolve({ success: true });
-            }
-        });
-    });
+const portsToTry = [9, 7]; // istersen daha fazlasını ekleyebilirsin
+
+async function wakeDevice(macAddress, broadcast = "192.168.31.255") {
+    for (const port of portsToTry) {
+        try {
+            await new Promise((resolve, reject) => {
+                wol.wake(macAddress, { address: broadcast, port }, function (error) {
+                    if (error) {
+                        console.warn(`[WARN] Port ${port} başarısız: ${error.message}`);
+                        reject(error);
+                    } else {
+                        console.log(`[OK] Wake sinyali gönderildi ${macAddress} için (Port: ${port})`);
+                        resolve();
+                    }
+                });
+            });
+            return { success: true, port };
+        } catch (_) {
+            continue; // sıradaki porta geç
+        }
+    }
+    return { success: false, error: "Hiçbir port üzerinden sinyal gönderilemedi." };
 }
+
 
 module.exports = {
     wakeDevice,

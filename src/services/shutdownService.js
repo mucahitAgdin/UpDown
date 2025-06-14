@@ -1,5 +1,5 @@
 // src/services/shutdownService.js
-const { exec } = require("child_process");
+const dgram = require('dgram');
 
 function logShutdown(ip, status, error = null) {
   const timestamp = new Date().toISOString();
@@ -12,20 +12,41 @@ function logShutdown(ip, status, error = null) {
   }
 }
 
-
 async function shutdownWindowsDevice(ip) {
-  const command = `shutdown /s /m \\\\${ip} /t 5 /f /c "Uzaktan kapatma"`; // 5 saniye içinde force shutdown
-
-  logShutdown(ip, "attempting");
-
   return new Promise((resolve, reject) => {
-    exec(command, (error, stdout, stderr) => {
-      if (error) {
-        logShutdown(ip, "failed", error.message);
-        reject(new Error(stderr || stdout || error.message));
+    const client = dgram.createSocket('udp4');
+    const message = Buffer.from('SHUTDOWN');
+    const port = 9999;
+    const timeout = 3000; // 3 saniye timeout
+
+    // Timeout kontrolü
+    const timer = setTimeout(() => {
+      client.close();
+      logShutdown(ip, "failed", "Timeout: No response from listener");
+      reject(new Error("Timeout: Listener didn't respond"));
+    }, timeout);
+
+    client.on('error', (err) => {
+      clearTimeout(timer);
+      client.close();
+      logShutdown(ip, "failed", err.message);
+      reject(err);
+    });
+
+    client.send(message, 0, message.length, port, ip, (err) => {
+      if (err) {
+        clearTimeout(timer);
+        client.close();
+        logShutdown(ip, "failed", err.message);
+        reject(err);
       } else {
         logShutdown(ip, "success");
-        resolve({ success: true, message: `${ip} kapatılıyor...` });
+        clearTimeout(timer);
+        client.close();
+        resolve({ 
+          success: true, 
+          message: `Shutdown command sent to ${ip}:${port}` 
+        });
       }
     });
   });

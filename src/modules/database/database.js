@@ -14,7 +14,7 @@ db.serialize(() => {
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT,
             ip TEXT,
-            mac TEXT UNIQUE
+            mac TEXT
        )`);
 });
 
