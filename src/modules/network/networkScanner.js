@@ -36,6 +36,9 @@ function scanNetwork() {
                 const mac = host.mac || "00:00:00:00:00:00";
                 const name = host.hostname || "Unknown";
 
+                // Veritabanına ekle (aynı MAC tekrar eklenmez)
+                await addDevice({ name, ip, mac });
+
                 results.push({ name, ip, mac });
             }
 
