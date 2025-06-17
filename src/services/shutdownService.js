@@ -45,12 +45,24 @@ async function shutdownWindowsDevice(ip) {
         logShutdown(ip, "success");
         clearTimeout(timer);
         client.close();
-        resolve({ 
-          success: true, 
-          message: `Shutdown command sent to ${ip}:${port}` 
+        resolve({
+          success: true,
+          message: `Shutdown command sent to ${ip}:${port}`
         });
       }
     });
+    client.on('message', (msg, rinfo) => {
+      if (msg.toString() === 'ACK') {
+        clearTimeout(timer);
+        client.close();
+        logShutdown(ip, "success");
+        resolve({
+          success: true,
+          message: `ACK received from ${ip}:${port}`
+        });
+      }
+    });
+
   });
 }
 
