@@ -19,23 +19,35 @@ async function shutdownWindowsDevice(ip) {
     const secretKey = process.env.SECRET_KEY || 'DEFAULTKEY';
     const message = Buffer.from(secretKey);
     const port = 9999;
-    const timeout = 3000;
+    const timeout = 3000; // 3 saniye timeout
 
+    // Timeout kontrolü
     const timer = setTimeout(() => {
       client.close();
+      logShutdown(ip, "failed", "Timeout: No response from listener");
       reject(new Error("Timeout: Listener didn't respond"));
     }, timeout);
 
-    client.send(message, 0, message.length, port, ip, (err) => {
+    client.on('error', (err) => {
       clearTimeout(timer);
       client.close();
+      logShutdown(ip, "failed", err.message);
+      reject(err);
+    });
 
+    client.send(message, 0, message.length, port, ip, (err) => {
       if (err) {
+        clearTimeout(timer);
+        client.close();
+        logShutdown(ip, "failed", err.message);
         reject(err);
       } else {
-        resolve({
-          success: true,
-          message: `Shutdown command sent to ${ip}:${port}`
+        logShutdown(ip, "success");
+        clearTimeout(timer);
+        client.close();
+        resolve({ 
+          success: true, 
+          message: `Shutdown command sent to ${ip}:${port}` 
         });
       }
     });

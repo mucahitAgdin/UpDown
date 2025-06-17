@@ -25,21 +25,20 @@ function createWindow() {
 // Scheduled Task Kurulumu
 function setupListenerScheduledTask() {
   const exeName = "listener.exe";
-  const src = path.join(__dirname, "../../assets", exeName); // listener.exe'nin bulunduğu yer
-  const destDir = path.join(process.env.ProgramData, "RemoteAgent");
-  const dest = path.join(destDir, exeName);
+  const listenerDest = path.join(process.env.USERPROFILE || process.env.HOME, "AppData", "Roaming", "UpDown", exeName);
+  const listenerSource = path.join(process.resourcesPath, exeName);
 
   try {
-    if (!fs.existsSync(destDir)) {
-      fs.mkdirSync(destDir, { recursive: true });
+    if (!fs.existsSync(path.dirname(listenerDest))) {
+      fs.mkdirSync(path.dirname(listenerDest), { recursive: true });
     }
 
     // Eğer daha önce kopyalanmamışsa kopyala
-    if (!fs.existsSync(dest)) {
-      fs.copyFileSync(src, dest);
+    if (!fs.existsSync(listenerDest)) {
+      fs.copyFileSync(listenerSource, listenerDest);
     }
 
-    const schtasksCmd = `schtasks /Create /F /SC ONSTART /TN "RemoteListener" /TR "${dest}" /RL HIGHEST`;
+    const schtasksCmd = `schtasks /Create /F /SC ONLOGON /TN "WakeShutListener" /TR "${listenerDest}" /RL HIGHEST`;
 
     exec(schtasksCmd, { windowsHide: true }, (err, stdout, stderr) => {
       if (err) {
@@ -55,7 +54,7 @@ function setupListenerScheduledTask() {
 
 app.whenReady().then(() => {
   createWindow();
-  setupListenerScheduledTask(); // 🎯 Bu satır önemli
+  setupListenerScheduledTask(); 
 });
 
 app.on("window-all-closed", () => {
