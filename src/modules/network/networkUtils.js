@@ -23,7 +23,7 @@ function getSubnet(ip){
 }
 
 //test 
-console.log("subnet:", getSubnet("192.168.31.76"));
+/*console.log("subnet:", getSubnet("192.168.31.76"));*/
 
 
 // Alt ağı al
