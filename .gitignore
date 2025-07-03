@@ -133,10 +133,8 @@ dist
 listener.exe
 python-3.13.3-amd64.exe
 
-# Geliştirici sistem dosyaları
+# Gelistirici sistem dosyaları
 .DS_Store
 Thumbs.db
-
-# hide database
 src/modules/database.db/
 
