@@ -11,7 +11,20 @@ Uygulamayı kullanmak için [buradan](https://github.com/mucahitAgdin/Wake-on-La
 
 ## ⚙️ Ön Gereksinimler
 
-### 1️⃣ BIOS Ayarları (Wake-on-LAN için)
+### 0 Kurulum Adımları
+UpDown uygulamasını kurduğun ana cihazda, aşağıdaki dosya yolunu takip edin:
+%localappdata%\wake-on-lan\resources\listener.exe
+
+listener.exe dosyasını, uzaktan kapatılacak olan cihaza kopyalayın.
+
+Hedef cihazda listener.exe dosyasını yönetici olarak çalıştırın.
+Bu uygulama arka planda çalışarak UDP üzerinden gelen kapatma komutlarını dinleyecektir.
+
+Uygulama çalışırken herhangi bir pencere göstermez. Görev Yöneticisi üzerinden “listener.exe” olarak takip edebilirsiniz.
+
+Not: Güvenlik duvarı ayarlarında UDP 9999 portunun açık olduğundan emin olun. Ayrıca bazı antivirüs yazılımları listener.exe dosyasını engelleyebilir; bu durumda güvenlik istisnası tanımlamanız gerekebilir.
+
+### 1️ BIOS Ayarları (Wake-on-LAN için)
 
 1. Bilgisayarınızı başlatırken F2, DEL veya üreticiye özel tuşla BIOS'a girin
 2. Advanced Settings > Power Management bölümünü bulun
@@ -21,7 +34,7 @@ Uygulamayı kullanmak için [buradan](https://github.com/mucahitAgdin/Wake-on-La
    * ErP Support (Disabled olarak ayarlayın)
 4. Değişiklikleri kaydedip çıkın (F10)
 
-### 2️⃣ Windows Ağ Ayarları
+### 2️ Windows Ağ Ayarları
 
 1. Ağ Bağlantıları > Ethernet adaptörüne sağ tık > Özellikler
 2. Configure > Advanced sekmesi:
@@ -32,7 +45,7 @@ Uygulamayı kullanmak için [buradan](https://github.com/mucahitAgdin/Wake-on-La
 
    * "Bu cihazın bilgisayarı uyandırmasına izin ver" kutusunu işaretleyin
 
-### 3️⃣ Güvenlik Duvarı İzinleri
+### 3️ Güvenlik Duvarı İzinleri
 
 1. Windows Defender Güvenlik Duvarı > Gelişmiş ayarlar
 2. Gelen kuralları:
