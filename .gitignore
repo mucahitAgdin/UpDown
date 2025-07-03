@@ -129,9 +129,6 @@ dist
 .yarn/install-state.gz
 .pnp.*
 
-# hide database
-src/modules/database.db/
-
 # temiz
 listener.exe
 python-3.13.3-amd64.exe
@@ -140,6 +137,6 @@ python-3.13.3-amd64.exe
 .DS_Store
 Thumbs.db
 
-# Log ve geçici dosyalar
-*.log
-*.tmp
+# hide database
+src/modules/database.db/
+
