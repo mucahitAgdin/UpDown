@@ -131,3 +131,17 @@ dist
 
 # hide database
 src/modules/database.db/
+
+# temiz
+diagram.png
+listener.exe
+python-3.13.3-amd64.exe
+updown.ico
+
+# Geliştirici sistem dosyaları
+.DS_Store
+Thumbs.db
+
+# Log ve geçici dosyalar
+*.log
+*.tmp
