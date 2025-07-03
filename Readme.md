@@ -7,7 +7,7 @@ Windows için hazır kurulum paketi
 
 ## 📥 Kurulum
 
-Uygulamayı kullanmak için [buradan](https://github.com/mucahitAgglin/Wake-on-Lan/releases/UpDownSetup1.0.0.exe) en son sürümünü indirin ve UpDown-Setup-x.x.x.exe dosyasını çalıştırın.
+Uygulamayı kullanmak için [buradan](https://github.com/mucahitAgglin/Wake-on-Lan/releases) en son sürümünü indirin ve UpDown-Setup-0.0.1.exe dosyasını çalıştırın.
 
 ## ⚙️ Ön Gereksinimler
 
