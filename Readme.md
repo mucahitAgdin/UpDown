@@ -2,7 +2,7 @@ README.md
 
 # UpDown – Ağ Üzerinden Cihaz Yönetimi Uygulaması
 
-![Uygulama Logosu](updown.icoupdown.ico)
+![Uygulama Logosu](updown.ico)
 Windows için hazır kurulum paketi
 
 ## 📥 Kurulum
