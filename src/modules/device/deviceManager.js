@@ -1,4 +1,4 @@
-//src/modules/device/deviceManager.js
+// src/modules/device/deviceManager.js
 
 const db = require("../database/database");
 
@@ -6,23 +6,33 @@ async function addDevice(device) {
   return new Promise((resolve, reject) => {
     const { name, ip, mac } = device;
     db.run(
-      `INSERT OR IGNORE INTO devices (name, ip, mac) VALUES(?, ?, ?)`,
+      `INSERT OR IGNORE INTO devices (name, ip, mac) VALUES (?, ?, ?)`,
       [name, ip, mac],
       function (err) {
         if (err) return reject(err);
         const success = this.changes > 0;
 
-        // Cihaz logunu burada yazdırıyoruz
         console.log(success
           ? ` Eklendi → Name: ${name}, IP: ${ip}, MAC: ${mac}`
           : ` Zaten ekli → Name: ${name}, IP: ${ip}, MAC: ${mac}`);
-        
-          resolve({
+
+        resolve({
           success,
-          message: success
-            ? "Cihaz eklendi"
-            : "Cihaz zaten mevcut"
+          message: success ? "Cihaz eklendi" : "Cihaz zaten mevcut"
         });
+      }
+    );
+  });
+}
+
+async function renameDevice(mac, newName) {
+  return new Promise((resolve, reject) => {
+    db.run(
+      `UPDATE devices SET name = ? WHERE mac = ?`,
+      [newName, mac],
+      function (err) {
+        if (err) return reject(err);
+        resolve({ success: true });
       }
     );
   });
@@ -46,4 +56,4 @@ async function removeDevice(mac) {
   });
 }
 
-module.exports = { addDevice, listDevices, removeDevice };
+module.exports = { addDevice, listDevices, removeDevice, renameDevice };

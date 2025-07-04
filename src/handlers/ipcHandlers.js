@@ -7,20 +7,18 @@ const { wakeDevice } = require("../services/wolService");
 const { getMacAddress } = require("../modules/network/macFinder");
 const { shutdownWindowsDevice } = require("../services/shutdownService");
 
-// Tüm handler'ları tek bir yerde topluyoruz
 module.exports = function setupIPCHandlers() {
 
   ipcMain.handle("scan-network", async () => {
     try {
       const devices = await scanNetwork();
-      return devices; // taranan ve veritabanına eklenen cihazları döndür
+      return devices;
     } catch (error) {
       console.error("Ağ tarama hatası:", error);
       return { success: false, message: "Ağ taraması sırasında bir hata oluştu." };
     }
   });
 
-  // MAC adresi çözümleme
   ipcMain.handle("get-mac-address", async (_, ip) => {
     try {
       const macAddress = await getMacAddress(ip);
@@ -31,7 +29,6 @@ module.exports = function setupIPCHandlers() {
     }
   });
 
-  // Cihaz işlemleri
   ipcMain.handle("get-device-list", async () => {
     try {
       return await deviceManager.listDevices();
@@ -43,8 +40,7 @@ module.exports = function setupIPCHandlers() {
 
   ipcMain.handle("add-device", async (_, device) => {
     try {
-      await deviceManager.addDevice(device);
-      return { success: true };
+      return await deviceManager.addDevice(device);
     } catch (error) {
       return { success: false, error: error.message };
     }
@@ -59,7 +55,15 @@ module.exports = function setupIPCHandlers() {
     }
   });
 
-  // Wake-on-LAN
+  ipcMain.handle("rename-device", async (_, mac, name) => {
+    try {
+      await deviceManager.renameDevice(mac, name);
+      return { success: true };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  });
+
   ipcMain.handle("wake-device", async (_, macAddress) => {
     try {
       return await wakeDevice(macAddress);

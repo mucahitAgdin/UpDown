@@ -15,5 +15,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // Uzak kontrol
   wakeDevice: (mac) => ipcRenderer.invoke("wake-device", mac),
 
-  shutdownDevice: (ip) => ipcRenderer.invoke('shutdown-device', ip)
+  shutdownDevice: (ip) => ipcRenderer.invoke('shutdown-device', ip),
+
+  renameDevice: (mac, name) => ipcRenderer.invoke("rename-device", mac, name)
 });
