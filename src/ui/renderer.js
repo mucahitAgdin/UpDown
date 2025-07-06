@@ -41,22 +41,22 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // --- AĞ TARAMA BUTONU ---
     searchDeviceBtn.addEventListener("click", async () => {
-    const scanStatus = document.getElementById("scan-status");
-    
-    try {
-        scanStatus.classList.remove("hidden");  // göster
-        const scannedDevices = await window.electronAPI.scanNetwork();
-        displayScannedDevices(scannedDevices);
-        showToast(`${scannedDevices.length} cihaz bulundu`, "success");
+        const scanStatus = document.getElementById("scan-status");
 
-    } catch (error) {
-        console.error("Ağ tarama hatası:", error);
-        showToast("Ağ tarama başarısız!", "error");
+        try {
+            scanStatus.classList.remove("hidden");  // göster
+            const scannedDevices = await window.electronAPI.scanNetwork();
+            displayScannedDevices(scannedDevices);
+            showToast(`${scannedDevices.length} cihaz bulundu`, "success");
 
-    } finally {
-        scanStatus.classList.add("hidden"); // gizle
-    }
-});
+        } catch (error) {
+            console.error("Ağ tarama hatası:", error);
+            showToast("Ağ tarama başarısız!", "error");
+
+        } finally {
+            scanStatus.classList.add("hidden"); // gizle
+        }
+    });
 
     // Sayfa açılışında cihazları yükle
     loadDevices();
@@ -91,51 +91,51 @@ function showToast(message, type = "info") {
  * @param {Array} devices - Taranan cihaz listesi
  */
 function displayScannedDevices(devices) {
-  const scannedListDiv = document.getElementById("scanned-device-list");
-  scannedListDiv.innerHTML = "";
+    const scannedListDiv = document.getElementById("scanned-device-list");
+    scannedListDiv.innerHTML = "";
 
-  devices.forEach((device, index) => {
-    console.log("Gelen cihaz:", device);
+    devices.forEach((device, index) => {
+        console.log("Gelen cihaz:", device);
 
-    let defaultName = device.name || "";
-    if (typeof defaultName !== "string") defaultName = "";
+        let defaultName = device.name || "";
+        if (typeof defaultName !== "string") defaultName = "";
 
-    const isUnknown = defaultName.trim() === "" ||
-                      ["bilinmeyen", "unknown"].includes(defaultName.toLowerCase());
+        const isUnknown = defaultName.trim() === "" ||
+            ["bilinmeyen", "unknown"].includes(defaultName.toLowerCase());
 
-    defaultName = isUnknown ? `Device ${index + 1}` : defaultName;
+        defaultName = isUnknown ? `Device ${index + 1}` : defaultName;
 
-    const deviceCard = document.createElement("div");
-    deviceCard.classList.add("device-card");
+        const deviceCard = document.createElement("div");
+        deviceCard.classList.add("device-card");
 
-    // Cihaz ismini kullanıcı girecek
-    const nameInput = document.createElement("input");
-    nameInput.type = "text";
-    nameInput.value = defaultName;
-    nameInput.placeholder = "Cihaz ismi girin...";
-    nameInput.style.width = "100%";
-    nameInput.style.padding = "5px";
-    nameInput.style.marginBottom = "6px";
+        // Cihaz ismini kullanıcı girecek
+        const nameInput = document.createElement("input");
+        nameInput.type = "text";
+        nameInput.value = defaultName;
+        nameInput.placeholder = "Cihaz ismi girin...";
+        nameInput.style.width = "100%";
+        nameInput.style.padding = "5px";
+        nameInput.style.marginBottom = "6px";
 
-    const ipP = document.createElement("p");
-    ipP.textContent = `IP: ${device.ip}`;
+        const ipP = document.createElement("p");
+        ipP.textContent = `IP: ${device.ip}`;
 
-    const addButton = document.createElement("button");
-    addButton.textContent = "Add";
-    addButton.addEventListener("click", () => {
-      const userName = nameInput.value.trim();
+        const addButton = document.createElement("button");
+        addButton.textContent = "Add";
+        addButton.addEventListener("click", () => {
+            const userName = nameInput.value.trim();
 
-      if (!userName) {
-        const confirmAdd = confirm("Cihazınıza isim vermediniz. Devam etmek istiyor musunuz?");
-        if (!confirmAdd) return;
-      }
+            if (!userName) {
+                const confirmAdd = confirm("Cihazınıza isim vermediniz. Devam etmek istiyor musunuz?");
+                if (!confirmAdd) return;
+            }
 
-      addDevice(userName || defaultName, device.ip, device.mac);
+            addDevice(userName || defaultName, device.ip, device.mac);
+        });
+
+        deviceCard.append(nameInput, ipP, addButton);
+        scannedListDiv.appendChild(deviceCard);
     });
-
-    deviceCard.append(nameInput, ipP, addButton);
-    scannedListDiv.appendChild(deviceCard);
-  });
 }
 
 /**
@@ -147,61 +147,66 @@ function displayScannedDevices(devices) {
 async function addDevice(name, ip, mac) {
     try {
         const result = await window.electronAPI.addDevice({ name, ip, mac });
-        if (result.success) {
-            showToast("Cihaz eklendi", "success");
+
+        if (result.success && result.message === "Cihaz eklendi") {
+            showToast("Cihaz başarıyla eklendi", "success");
             await loadDevices();
+        } else if (result.message === "Cihaz zaten mevcut") {
+            showToast("Bu cihaz zaten eklenmiş", "info");
         } else {
             showToast(result.message || "Cihaz eklenemedi", "warning");
         }
+
     } catch (error) {
         console.error("Ekleme hatası:", error);
         showToast("Cihaz eklenemedi!", "error");
     }
 }
 
+
 /**
  * CİHAZ LİSTESİNİ YÜKLE
  */
 async function loadDevices() {
-  try {
-    const devices = await window.electronAPI.listDevices();
-    const deviceListDiv = document.getElementById("device-list");
-    deviceListDiv.innerHTML = "";
+    try {
+        const devices = await window.electronAPI.listDevices();
+        const deviceListDiv = document.getElementById("device-list");
+        deviceListDiv.innerHTML = "";
 
-    devices.forEach(device => {
-      const deviceCard = document.createElement("div");
-      deviceCard.classList.add("device-card");
+        devices.forEach(device => {
+            const deviceCard = document.createElement("div");
+            deviceCard.classList.add("device-card");
 
-      // Cihaz adı
-      const nameP = document.createElement("p");
-      nameP.innerHTML = `<strong>${device.name}</strong>`;
+            // Cihaz adı
+            const nameP = document.createElement("p");
+            nameP.innerHTML = `<strong>${device.name}</strong>`;
 
-      // IP bilgisi
-      const ipP = document.createElement("p");
-      ipP.textContent = `IP: ${device.ip}`;
+            // IP bilgisi
+            const ipP = document.createElement("p");
+            ipP.textContent = `IP: ${device.ip}`;
 
-      // Wake-on-LAN butonu
-      const wakeBtn = document.createElement("button");
-      wakeBtn.textContent = "Wake";
-      wakeBtn.addEventListener("click", () => wakeDevice(device.mac));
+            // Wake-on-LAN butonu
+            const wakeBtn = document.createElement("button");
+            wakeBtn.textContent = "Wake";
+            wakeBtn.addEventListener("click", () => wakeDevice(device.mac));
 
-      // Cihaz silme
-      const removeBtn = document.createElement("button");
-      removeBtn.textContent = "Remove";
-      removeBtn.addEventListener("click", () => removeDevice(device.mac));
+            // Cihaz silme
+            const removeBtn = document.createElement("button");
+            removeBtn.textContent = "Remove";
+            removeBtn.addEventListener("click", () => removeDevice(device.mac));
 
-      // Cihazı kapatma
-      const shutdownBtn = document.createElement("button");
-      shutdownBtn.textContent = "Shutdown";
-      shutdownBtn.classList.add("shutdown-btn");
-      shutdownBtn.addEventListener("click", () => shutdownDevice(device.ip));
+            // Cihazı kapatma
+            const shutdownBtn = document.createElement("button");
+            shutdownBtn.textContent = "Shutdown";
+            shutdownBtn.classList.add("shutdown-btn");
+            shutdownBtn.addEventListener("click", () => shutdownDevice(device.ip));
 
-      deviceCard.append(nameP, ipP, wakeBtn, removeBtn, shutdownBtn);
-      deviceListDiv.appendChild(deviceCard);
-    });
-  } catch (error) {
-    console.error("Cihaz listesi yüklenemedi:", error);
-  }
+            deviceCard.append(nameP, ipP, wakeBtn, removeBtn, shutdownBtn);
+            deviceListDiv.appendChild(deviceCard);
+        });
+    } catch (error) {
+        console.error("Cihaz listesi yüklenemedi:", error);
+    }
 }
 
 
@@ -241,16 +246,16 @@ async function wakeDevice(mac) {
 async function shutdownDevice(ip) {
     const confirmShutdown = confirm("Bu cihazı kapatmak istediğinize emin misiniz?");
     if (!confirmShutdown) return;
-  
+
     try {
-      const result = await window.electronAPI.shutdownDevice(ip);
-      showToast(result.message, result.success ? "success" : "error");
+        const result = await window.electronAPI.shutdownDevice(ip);
+        showToast(result.message, result.success ? "success" : "error");
     } catch (error) {
-      console.error("Shutdown error:", error);
-      showToast("Kapatma işlemi başarısız!", "error");
+        console.error("Shutdown error:", error);
+        showToast("Kapatma işlemi başarısız!", "error");
     }
-  }
- 
+}
+
 // rename device fonksiyonu
 async function renameDevice(mac, name) {
     try {

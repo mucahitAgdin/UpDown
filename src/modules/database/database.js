@@ -4,17 +4,19 @@ const sqlite3 = require("sqlite3").verbose();
 const path = require("path");
 const fs = require("fs");
 
-// AppData klasörünü kullan (Windows, Linux, Mac uyumlu)
+// Uygulama verisi için AppData, macOS, Linux destekli platform bağımsız yol
 const appDataPath = path.join(
-  process.env.APPDATA || 
-  (process.platform === 'darwin' ? path.join(process.env.HOME, 'Library/Application Support') : path.join(process.env.HOME, '.config')),
+  process.env.APPDATA ||
+    (process.platform === "darwin"
+      ? path.join(process.env.HOME, "Library/Application Support")
+      : path.join(process.env.HOME, ".config")),
   "WakeShutdown"
 );
 
-// devices.db tam yolu
+// Veritabanı dosyasının tam yolu
 const dbPath = path.join(appDataPath, "devices.db");
 
-// Klasör yoksa oluştur
+// Gerekirse AppData klasörünü oluştur
 if (!fs.existsSync(appDataPath)) {
   fs.mkdirSync(appDataPath, { recursive: true });
 }
@@ -22,15 +24,15 @@ if (!fs.existsSync(appDataPath)) {
 // Veritabanını oluştur ya da aç
 const db = new sqlite3.Database(dbPath);
 
-// Tabloyu oluştur
+// Tablo oluştur: Eğer yoksa oluşturulacak
 db.serialize(() => {
   db.run(`
     CREATE TABLE IF NOT EXISTS devices (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
-      name TEXT,
-      ip TEXT,
-      mac TEXT
-    )
+      name TEXT NOT NULL,
+      ip TEXT NOT NULL,
+      mac TEXT NOT NULL UNIQUE
+    );
   `);
 });
 
