@@ -39,8 +39,6 @@
   "dependencies": {
     "dotenv": "^16.5.0",
     "ip": "^2.0.1",
-    "node-nmap": "^4.0.0",
-    "node-ssh": "^13.2.1",
     "ping": "^0.4.4",
     "sqlite3": "^5.1.7",
     "wake_on_lan": "^1.0.0",
