@@ -95,15 +95,6 @@ UpDown uygulamasını kurduğunuz ana cihazda aşağıdaki dosya yolunu takip ed
 
 ---
 
-## 🔄 Otomatik Başlatma
-
-Uygulama, Windows başlangıcında otomatik çalışacak şekilde ayarlanmıştır. Bunu devre dışı bırakmak için:
-
-1. UpDown uygulamasını açın.
-2. Ayarlar menüsünden `Settings > Start with Windows` seçeneğini kapatın.
-
----
-
 ## 🛠️ Sorun Giderme
 
 ### ❌ Wake-on-LAN Çalışmıyorsa
