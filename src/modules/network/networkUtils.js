@@ -51,5 +51,4 @@ function getIPRange() {
 
 module.exports = { getIPRange };
 
-// Modül olarak dışa aktar
 module.exports = { getLocalIP, getSubnet, getIPRange };

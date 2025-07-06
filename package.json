@@ -1,5 +1,5 @@
 {
-  "name": "wake-on-lan",
+  "name": "up-down",
   "version": "1.0.1",
   "main": "src/main/main.js",
   "scripts": {
